@@ -1,6 +1,8 @@
 import React from 'react';
 import App from 'next/app';
-import Router from 'next/router';
+import { default as Router } from 'next/router';
+import { IntlMessages, NextIntlProvider } from 'next-intl';
+import { safeJsonParse } from '@/utils/json';
 import { IGlobalContext, GlobalContext } from '@/context/global';
 import { SettingProvider } from '@/providers/setting';
 import { PageProvider } from '@/providers/page';
@@ -23,31 +25,64 @@ Router.events.on('routeChangeComplete', () => {
   }, 0);
 });
 
-class MyApp extends App<IGlobalContext, {}> {
-  static getInitialProps = async (ctx) => {
-    const [appProps, setting, tags, categories, pages] = await Promise.all([
-      App.getInitialProps(ctx),
+class MyApp extends App<IGlobalContext, unknown> {
+  state = {
+    locale: '',
+  };
+
+  static getInitialProps = async ({ Component, ctx }) => {
+    const getPagePropsPromise = Component.getInitialProps
+      ? Component.getInitialProps(ctx)
+      : Promise.resolve({});
+    const [pageProps, setting, tags, categories, pages] = await Promise.all([
+      getPagePropsPromise,
       SettingProvider.getSetting(),
       TagProvider.getTags({ articleStatus: 'publish' }),
       CategoryProvider.getCategory({ articleStatus: 'publish' }),
       PageProvider.getAllPublisedPages(),
     ]);
-    return { ...appProps, setting, tags, categories, pages: pages[0] || [] };
+    const i18n = safeJsonParse(setting.i18n);
+    return {
+      pageProps,
+      setting,
+      tags,
+      categories,
+      pages: pages[0] || [],
+      i18n,
+      locales: Object.keys(i18n),
+    };
+  };
+
+  changeLocale = (key) => {
+    window.localStorage.setItem('locale', key);
+    this.setState({ locale: key });
   };
 
   render() {
-    const { Component, pageProps, ...contextValue } = this.props;
+    const { Component, pageProps, i18n, locales, router, ...contextValue } = this.props;
+    const locale = this.state.locale || router.locale;
     const { needLayoutFooter = true } = pageProps;
+    const message = i18n[locale] || {};
 
     return (
-      <GlobalContext.Provider value={contextValue}>
-        <FixAntdStyleTransition />
-        <ViewStatistics />
-        <Analytics />
-        <AppLayout needFooter={needLayoutFooter}>
-          <NProgress color={'#ff0064'} />
-          <Component {...pageProps} />
-        </AppLayout>
+      <GlobalContext.Provider
+        value={{
+          ...contextValue,
+          i18n,
+          locale,
+          locales,
+          changeLocale: this.changeLocale,
+        }}
+      >
+        <NextIntlProvider messages={message as IntlMessages} locale={locale}>
+          <FixAntdStyleTransition />
+          <ViewStatistics />
+          <Analytics />
+          <AppLayout needFooter={needLayoutFooter}>
+            <NProgress color={'#ff0064'} />
+            <Component {...pageProps} />
+          </AppLayout>
+        </NextIntlProvider>
       </GlobalContext.Provider>
     );
   }

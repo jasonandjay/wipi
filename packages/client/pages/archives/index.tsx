@@ -1,13 +1,13 @@
 import React, { useContext } from 'react';
 import { NextPage } from 'next';
 import Link from 'next/link';
-import { Icon } from 'antd';
+import { useTranslations } from 'next-intl';
 import { ArticleProvider } from '@/providers/article';
 import { GlobalContext } from '@/context/global';
 import { DoubleColumnLayout } from '@/layout/DoubleColumnLayout';
+import { ListTrail } from '@/components/Animation/Trail';
 import { LocaleTime } from '@/components/LocaleTime';
 import { ArticleRecommend } from '@/components/ArticleRecommend';
-import { Tags } from '@components/Tags';
 import { Categories } from '@components/Categories';
 import style from './index.module.scss';
 
@@ -20,18 +20,28 @@ const ArchiveItem = ({ month, articles = [] }) => {
     <div className={style.item}>
       <h3>{month}</h3>
       <ul>
-        {articles.map((article) => (
-          <li key={article.id}>
-            <Link href={`/article/[id]`} as={`/article/${article.id}`} scroll={false}>
-              <a>
-                <span className={style.meta}>
-                  <LocaleTime date={article.publishAt} format={'MM-dd'} />
-                </span>
-                <span className={style.title}>{article.title}</span>
-              </a>
-            </Link>
-          </li>
-        ))}
+        <ListTrail
+          length={articles.length}
+          options={{
+            opacity: 1,
+            height: 48,
+            x: 0,
+            from: { opacity: 0, height: 0, x: -20 },
+          }}
+          renderItem={(index) => {
+            const article = articles[index];
+            return (
+              <Link href={`/article/[id]`} as={`/article/${article.id}`} scroll={false}>
+                <a>
+                  <span className={style.meta}>
+                    <LocaleTime date={article.publishAt} format={'MM-dd'} />
+                  </span>
+                  <span className={style.title}>{article.title}</span>
+                </a>
+              </Link>
+            );
+          }}
+        />
       </ul>
     </div>
   );
@@ -47,32 +57,34 @@ const resolveArticlesCount = (articles) => {
 };
 
 const Archives: NextPage<IProps> = ({ articles }) => {
-  const { tags, categories } = useContext(GlobalContext);
+  const { categories } = useContext(GlobalContext);
+  const t = useTranslations();
 
   return (
     <DoubleColumnLayout
       leftNode={
         <div className={style.content}>
           <div className={style.summary}>
-            <div>
-              <Icon type="block" />
-            </div>
             <p>
-              <span>归档</span>
+              <span>{t('archives')}</span>
             </p>
             <p>
-              共计 <span>{resolveArticlesCount(articles)}</span> 篇
+              {t('total')} <span>{resolveArticlesCount(articles)}</span> {t('piece')}
             </p>
           </div>
           {Object.keys(articles)
             .sort((a, b) => +b - +a)
             .map((year) => {
               return (
-                <div className={style.list}>
+                <div className={style.list} key={year}>
                   <h2>{year}</h2>
                   {Object.keys(articles[year]).map((month) => {
                     return (
-                      <ArchiveItem key={year} month={month} articles={articles[year][month]} />
+                      <ArchiveItem
+                        key={year + '-' + month}
+                        month={month}
+                        articles={articles[year][month]}
+                      />
                     );
                   })}
                 </div>
@@ -84,7 +96,6 @@ const Archives: NextPage<IProps> = ({ articles }) => {
         <div className="sticky">
           <ArticleRecommend mode="inline" />
           <Categories categories={categories} />
-          <Tags tags={tags} />
         </div>
       }
     />

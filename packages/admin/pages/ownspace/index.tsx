@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useCallback, useContext } from 'react';
+import React, { useState, useCallback, useContext } from 'react';
 import { NextPage } from 'next';
-import { Row, Col, List, Typography, Card, Avatar, Form, Input, Button, Tabs, message } from 'antd';
-import Router from 'next/router';
+import { Form } from '@ant-design/compatible';
+import { Row, Col, List, Typography, Card, Avatar, Input, Button, Tabs, message } from 'antd';
+import { default as Router } from 'next/router';
 import { AdminLayout } from '@/layout/AdminLayout';
 import { FileSelectDrawer } from '@/components/FileSelectDrawer';
 import { ArticleProvider } from '@/providers/article';
@@ -11,6 +12,7 @@ import { CategoryProvider } from '@/providers/category';
 import { FileProvider } from '@/providers/file';
 import { UserProvider } from '@/providers/user';
 import { GlobalContext } from '@/context/global';
+import styles from './index.module.scss';
 
 interface IOwnspaceProps {
   articlesCount: number;
@@ -48,7 +50,7 @@ const Ownspace: NextPage<IOwnspaceProps> = ({
       globalContext.setUser(res);
       message.success('用户信息已保存');
     });
-  }, [user]);
+  }, [user, globalContext]);
 
   const changePassword = () => {
     if (!oldPassword || !newPassword1 || !newPassword2) {
@@ -74,28 +76,13 @@ const Ownspace: NextPage<IOwnspaceProps> = ({
 
   return (
     <AdminLayout>
-      <Row gutter={16}>
+      <Row gutter={16} className={styles.wrapper}>
         <Col span={12} md={12} xs={24}>
           <List
             style={{ backgroundColor: '#fff' }}
-            header={
-              user && (
-                <div
-                  style={{ textAlign: 'center' }}
-                  onClick={() => {
-                    setVisible(true);
-                  }}
-                >
-                  {user.avatar ? (
-                    <Avatar size={64} src={user.avatar} />
-                  ) : (
-                    <Avatar size={64} icon="user" />
-                  )}
-                </div>
-              )
-            }
-            bordered={true}
+            header={'系统概览'}
             dataSource={data}
+            bordered={true}
             renderItem={(item) => (
               <List.Item>
                 <Typography.Text>{item}</Typography.Text>
@@ -121,7 +108,17 @@ const Ownspace: NextPage<IOwnspaceProps> = ({
             <Card title="个人资料" bordered={true}>
               <Tabs defaultActiveKey="1">
                 <TabPane tab="基本设置" key="1">
-                  <Form.Item label="用户名">
+                  <Form.Item labelCol={{ xs: 8, sm: 6, md: 4 }} labelAlign="left">
+                    <div
+                      style={{ textAlign: 'center' }}
+                      onClick={() => {
+                        setVisible(true);
+                      }}
+                    >
+                      <Avatar size={64} src={user.avatar} />
+                    </div>
+                  </Form.Item>
+                  <Form.Item label="用户名" labelCol={{ xs: 8, sm: 6, md: 4 }} labelAlign="left">
                     <Input
                       placeholder="请输入用户名"
                       defaultValue={user.name}
@@ -134,7 +131,7 @@ const Ownspace: NextPage<IOwnspaceProps> = ({
                       }}
                     />
                   </Form.Item>
-                  <Form.Item label="邮箱">
+                  <Form.Item label="邮箱" labelCol={{ xs: 8, sm: 6, md: 4 }} labelAlign="left">
                     <Input
                       placeholder="请输入邮箱"
                       defaultValue={user.email}
@@ -158,7 +155,7 @@ const Ownspace: NextPage<IOwnspaceProps> = ({
                   </Button>
                 </TabPane>
                 <TabPane tab="更新密码" key="2">
-                  <Form.Item label="原密码">
+                  <Form.Item label="原密码" labelCol={{ xs: 8, sm: 6, md: 4 }} labelAlign="left">
                     <Input.Password
                       placeholder="请输入原密码"
                       value={oldPassword}
@@ -168,7 +165,7 @@ const Ownspace: NextPage<IOwnspaceProps> = ({
                       }}
                     />
                   </Form.Item>
-                  <Form.Item label="新密码">
+                  <Form.Item label="新密码" labelCol={{ xs: 8, sm: 6, md: 4 }} labelAlign="left">
                     <Input.Password
                       placeholder="请输入新密码"
                       value={newPassword1}
@@ -178,7 +175,7 @@ const Ownspace: NextPage<IOwnspaceProps> = ({
                       }}
                     />
                   </Form.Item>
-                  <Form.Item label="确认密码">
+                  <Form.Item label="确认密码" labelCol={{ xs: 8, sm: 6, md: 4 }} labelAlign="left">
                     <Input.Password
                       placeholder="请确认新密码"
                       value={newPassword2}

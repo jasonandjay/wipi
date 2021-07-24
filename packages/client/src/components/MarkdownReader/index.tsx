@@ -1,27 +1,54 @@
 import React, { useRef, useEffect } from 'react';
 import hljs from 'highlight.js';
-import { copy } from '@/utils';
+import { useTranslations } from 'next-intl';
+import { copy } from '@/utils/copy';
 import './index.module.scss';
 
 export const MarkdownReader = ({ content }) => {
   const ref = useRef<HTMLDivElement>();
+  const t = useTranslations();
+
+  useEffect(() => {
+    if (!content) {
+      return;
+    }
+    const el = ref.current;
+    const range = document.createRange();
+    const slot = range.createContextualFragment(content);
+    el.innerHTML = '';
+    el.appendChild(slot);
+  }, [content]);
 
   // 高亮
   useEffect(() => {
-    if (!ref.current) return;
+    if (!ref.current) {
+      return;
+    }
+
+    const callbacks = [];
 
     setTimeout(() => {
       const blocks = ref.current.querySelectorAll('pre code');
       blocks.forEach((block: HTMLElement) => {
         const span = document.createElement('span');
         span.classList.add('copy-code-btn');
-        span.innerText = '复制';
-        span.onclick = () => copy(block.innerText);
+        span.innerText = t('copy') as string;
+        span.onclick = () => copy(block.innerText, t);
         block.parentNode.insertBefore(span, block);
+
+        callbacks.push(() => {
+          block.parentNode.removeChild(span);
+        });
+
         hljs.highlightBlock(block);
       });
     }, 0);
-  }, [content]);
 
-  return <div ref={ref} className={'markdown'} dangerouslySetInnerHTML={{ __html: content }}></div>;
+    // eslint-disable-next-line consistent-return
+    return () => {
+      callbacks.forEach((cb) => cb());
+    };
+  }, [content, t]);
+
+  return <div ref={ref} className={'markdown'}></div>;
 };

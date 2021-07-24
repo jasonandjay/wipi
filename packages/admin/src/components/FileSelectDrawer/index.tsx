@@ -1,14 +1,38 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useCallback, useRef } from 'react';
 import { Alert, Drawer, Card, List, Button } from 'antd';
 import Viewer from 'viewerjs';
-import { copy } from '@/utils';
+import { copy } from '@/utils/copy';
 import { FileProvider } from '@/providers/file';
-import { DataTable } from '@/components/DataTable';
 import { Upload } from '@/components/Upload';
+import { usePagination } from '@/hooks/usePagination';
+import { PaginationTable } from '@/components/PaginationTable';
 import style from './index.module.scss';
 
 const { Meta } = Card;
 let viewer = null;
+
+const SEARCH_FIELDS = [
+  {
+    label: '文件名称',
+    field: 'originalname',
+    msg: '请输入文件名称',
+  },
+  {
+    label: '文件类型',
+    field: 'type',
+    msg: '请输入文件类型',
+  },
+];
+
+const GRID = {
+  gutter: 16,
+  xs: 1,
+  sm: 2,
+  md: 4,
+  lg: 4,
+  xl: 4,
+  xxl: 6,
+};
 
 interface IFileProps {
   isCopy?: boolean;
@@ -26,14 +50,12 @@ export const FileSelectDrawer: React.FC<IFileProps> = ({
   onChange,
 }) => {
   const ref = useRef();
-  const [files, setFiles] = useState<IFile[]>([]);
-
-  const getFiles = useCallback((params = {}) => {
-    return FileProvider.getFiles(params).then((res) => {
-      setFiles(res[0]);
-      return res;
-    });
-  }, []);
+  const {
+    loading,
+    data: files,
+    refresh,
+    ...resetPagination
+  } = usePagination<IFile>(FileProvider.getFiles);
 
   const previewImage = useCallback((e) => {
     e.stopPropagation();
@@ -53,6 +75,28 @@ export const FileSelectDrawer: React.FC<IFileProps> = ({
     [isCopy, onChange, closeAfterClick, onClose]
   );
 
+  const renderList = useCallback(
+    (data) => {
+      const renderItem = (file: IFile) => (
+        <List.Item key={file.id}>
+          <Card
+            hoverable={true}
+            cover={
+              <div className={style.preview} onClick={previewImage}>
+                <img alt={file.originalname} src={file.url} />
+              </div>
+            }
+            onClick={() => clickImage(file)}
+          >
+            <Meta title={file.originalname} />
+          </Card>
+        </List.Item>
+      );
+      return <List className={style.imgs} grid={GRID} dataSource={data} renderItem={renderItem} />;
+    },
+    [clickImage, previewImage]
+  );
+
   return (
     <Drawer
       width={786}
@@ -67,56 +111,19 @@ export const FileSelectDrawer: React.FC<IFileProps> = ({
           <Alert message="点击卡片复制链接，点击图片查看大图" type="info" />
         </div>
       )}
-
       <div ref={ref}>
-        <DataTable
+        <PaginationTable
+          loading={loading}
           data={files}
-          defaultTotal={0}
-          columns={[]}
-          searchFields={[
-            {
-              label: '文件名称',
-              field: 'originalname',
-              msg: '请输入文件名称',
-            },
-            {
-              label: '文件类型',
-              field: 'type',
-              msg: '请输入文件类型',
-            },
-          ]}
-          showSearchLabel={false}
-          padding={0}
-          onSearch={getFiles}
+          {...resetPagination}
+          refresh={refresh}
+          searchFields={SEARCH_FIELDS}
           rightNode={
-            <Upload onOK={getFiles} useDragger={false}>
+            <Upload onOK={refresh} useDragger={false}>
               <Button>上传文件</Button>
             </Upload>
           }
-          customDataTable={(data) => (
-            <List
-              grid={{
-                gutter: 16,
-                sm: 3,
-              }}
-              dataSource={files}
-              renderItem={(file: IFile) => (
-                <List.Item key={file.id}>
-                  <Card
-                    hoverable={true}
-                    cover={
-                      <div className={style.preview} onClick={previewImage}>
-                        <img alt={file.originalname} src={file.url} />
-                      </div>
-                    }
-                    onClick={() => clickImage(file)}
-                  >
-                    <Meta title={file.originalname} />
-                  </Card>
-                </List.Item>
-              )}
-            />
-          )}
+          customDataTable={renderList}
         />
       </div>
     </Drawer>

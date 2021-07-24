@@ -1,6 +1,7 @@
 import React from 'react';
-import { Form, Row, Col, Input, Button } from 'antd';
-import { FormComponentProps } from 'antd/es/form';
+import { Form } from '@ant-design/compatible';
+import { Row, Col, Input, Button } from 'antd';
+import { FormComponentProps } from '@ant-design/compatible/es/form';
 import style from './index.module.scss';
 
 export interface IFieldItem {
@@ -14,7 +15,7 @@ export interface IFieldItem {
 interface IProps extends FormComponentProps {
   fields: Array<IFieldItem>;
   showLabel?: boolean;
-  padding?: number;
+  padding?: number | string;
   onSearch?: (arg) => void;
   onReset?: (arg) => void;
 }
@@ -23,12 +24,10 @@ const _Search: React.FC<IProps> = ({
   form,
   fields = [],
   showLabel = true,
-  padding = 24,
+  padding = 12,
   onSearch,
 }) => {
   const getFields = () => {
-    const count = 6;
-
     const { getFieldDecorator } = form;
     const children = [];
     for (const field of fields) {
@@ -86,17 +85,12 @@ const _Search: React.FC<IProps> = ({
 
   return (
     <Form className={style.wrapper} style={{ padding }} layout="inline" onSubmit={handleSearch}>
-      <Row className={style.content}>
-        {getFields()}
-        {fields.length <= 3 && <Col>{submitContent}</Col>}
+      <Row gutter={24}>{getFields()}</Row>
+      <Row gutter={24}>
+        <Col span={24} style={{ textAlign: 'right' }}>
+          {submitContent}
+        </Col>
       </Row>
-      {fields.length > 3 && (
-        <Row>
-          <Col span={24} style={{ textAlign: 'right' }}>
-            {submitContent}
-          </Col>
-        </Row>
-      )}
     </Form>
   );
 };

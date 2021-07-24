@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Input, Button, message } from 'antd';
+import { Form } from '@ant-design/compatible';
+import { Input, Button, message } from 'antd';
 import { SettingProvider } from '@/providers/setting';
 
 export const AnalyticsSetting = ({ setting }) => {
@@ -16,13 +17,13 @@ export const AnalyticsSetting = ({ setting }) => {
       baiduAnalyticsId,
       googleAnalyticsId,
     };
-    SettingProvider.updateSetting(data).then((res) => {
+    SettingProvider.updateSetting(data).then(() => {
       message.success('保存成功');
     });
   };
 
   return (
-    <div>
+    <Form layout="vertical">
       <Form.Item label="百度统计">
         <Input
           placeholder="请输入百度统计 Id"
@@ -44,6 +45,6 @@ export const AnalyticsSetting = ({ setting }) => {
       <Button type="primary" onClick={save}>
         保存
       </Button>
-    </div>
+    </Form>
   );
 };

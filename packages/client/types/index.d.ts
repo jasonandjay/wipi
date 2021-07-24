@@ -24,6 +24,7 @@ interface IArticle {
   cover?: string;
   toc?: string;
   views: number;
+  likes: number;
   category: any;
   tags?: [any];
   status: string;
@@ -61,6 +62,7 @@ interface IKnowledge {
   html: string;
   toc: string;
   views: number;
+  likes: number;
   status: 'draft' | 'publish';
   isCommentable?: boolean;
   createAt: string;
@@ -88,6 +90,7 @@ interface IComment {
   name: string;
   email: string;
   content: string;
+  html: string;
   pass: boolean;
   createAt: string;
   userAgent: string;
@@ -129,6 +132,7 @@ interface ISearch {
 }
 
 interface ISetting {
+  i18n?: string;
   systemUrl?: string; // 系统地址
   systemTitle?: string; // 系统标题
   systemLogo?: string; // 系统 Logo

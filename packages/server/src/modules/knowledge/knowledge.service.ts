@@ -81,7 +81,7 @@ export class KnowledgeService {
    */
   async updateById(id, data: Partial<Knowledge>): Promise<Knowledge> {
     const oldData = await this.repository.findOne(id);
-    let { status } = oldData;
+    const { status } = oldData;
     const newData = {
       ...data,
       views: oldData.views,
@@ -102,6 +102,19 @@ export class KnowledgeService {
     const oldData = await this.repository.findOne(id);
     const newData = await this.repository.merge(oldData, {
       views: oldData.views + 1,
+    });
+    return this.repository.save(newData);
+  }
+
+  /**
+   * 更新喜欢数
+   * @param id
+   * @returns
+   */
+  async updateLikesById(id, type): Promise<Knowledge> {
+    const oldData = await this.repository.findOne(id);
+    const newData = await this.repository.merge(oldData, {
+      likes: type === 'like' ? oldData.likes + 1 : oldData.likes - 1,
     });
     return this.repository.save(newData);
   }

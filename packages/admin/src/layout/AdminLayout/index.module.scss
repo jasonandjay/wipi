@@ -3,6 +3,7 @@
   display: flex;
   flex-wrap: nowrap;
   width: 100vw;
+  min-width: 960px;
   height: 100vh;
   color: var(--text-primary-color);
 
@@ -41,9 +42,9 @@
     background-color: #eff2f5;
     overflow: auto;
 
-    > header {
+    >header {
       width: 100%;
-      padding: 16px 24px;
+      padding: 16px;
       border-bottom: 1px solid var(--border-color);
       background: #ffffff;
 

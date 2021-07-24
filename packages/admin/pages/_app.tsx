@@ -1,13 +1,17 @@
 import React from 'react';
 import App from 'next/app';
-import Router from 'next/router';
-import { message } from 'antd';
+import { ConfigProvider } from 'antd';
+import zhCN from 'antd/lib/locale/zh_CN';
+import { toLogin } from '@/utils/login';
+import { UserProvider } from '@/providers/user';
 import { SettingProvider } from '@/providers/setting';
-import { NProgress } from '@components/NProgress';
 import { IGlobalContext, GlobalContext } from '@/context/global';
+import { NProgress } from '@components/NProgress';
+import { Seo } from '@components/Seo';
 import { FixAntdStyleTransition } from '@/components/FixAntdStyleTransition';
 import { ViewStatistics } from '@/components/ViewStatistics';
 import { Analytics } from '@/components/Analytics';
+import '@ant-design/compatible/assets/index.css';
 import 'highlight.js/styles/atom-one-light.css';
 import 'viewerjs/dist/viewer.css';
 import '@/theme/antd.less';
@@ -22,20 +26,21 @@ class MyApp extends App {
   };
 
   setUser = (user) => {
-    if (!user) return;
+    if (!user) {
+      return;
+    }
     localStorage.setItem('user', JSON.stringify(user));
     this.setState({ user });
   };
 
   getUserFromStorage = () => {
     const str = localStorage.getItem('user');
-
     if (str) {
       const user = JSON.parse(str);
       this.setUser(user);
+      UserProvider.checkAdmin(user);
     } else {
-      message.info('请重新登录');
-      Router.push(`/login?redirect=${Router.asPath}`);
+      toLogin();
     }
   };
 
@@ -64,13 +69,16 @@ class MyApp extends App {
     };
 
     return (
-      <GlobalContext.Provider value={contextValue}>
-        <FixAntdStyleTransition />
-        <ViewStatistics />
-        <Analytics />
-        <NProgress color={'#0188fb'} />
-        <Component {...pageProps} />
-      </GlobalContext.Provider>
+      <ConfigProvider locale={zhCN}>
+        <GlobalContext.Provider value={contextValue}>
+          <Seo />
+          <FixAntdStyleTransition />
+          <ViewStatistics />
+          <Analytics />
+          <NProgress color={'#0188fb'} />
+          <Component {...pageProps} />
+        </GlobalContext.Provider>
+      </ConfigProvider>
     );
   }
 }

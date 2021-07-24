@@ -1,18 +1,3 @@
-import { message } from 'antd';
-
-export const copy = (value) => {
-  const textarea: HTMLTextAreaElement = document.createElement('textarea');
-  textarea.id = 't';
-  textarea.style.height = '0';
-  document.body.appendChild(textarea);
-  textarea.value = value;
-  const selector: HTMLTextAreaElement = document.querySelector('#t');
-  selector.select();
-  document.execCommand('copy');
-  document.body.removeChild(textarea);
-  message.success('内容已复制到剪切板');
-};
-
 export const groupBy = function (data, condition) {
   if (!condition || !Array.isArray(data)) {
     return data;
@@ -22,7 +7,7 @@ export const groupBy = function (data, condition) {
 
   data.forEach((item, i, arr) => {
     key = condition(item, i, arr);
-    if (key == null) {
+    if (key === null || key === undefined) {
       return;
     }
     if (result[key]) {
@@ -49,8 +34,8 @@ export function debounce(func, wait, immediate = false) {
   let timeout;
 
   const debounced = function () {
-    const context = this;
-    const args = arguments;
+    const context = this; // eslint-disable-line @typescript-eslint/no-this-alias
+    const args = arguments; // eslint-disable-line prefer-rest-params
     const later = function () {
       timeout = null;
       if (!immediate) {
@@ -71,3 +56,23 @@ export function debounce(func, wait, immediate = false) {
 
   return debounced;
 }
+
+export function resolveUrl(baseURL, relativeURL) {
+  if (!baseURL) {
+    baseURL = '/';
+  }
+
+  return relativeURL
+    ? baseURL.replace(/\/+$/, '') + '/' + relativeURL.replace(/^\/+/, '')
+    : baseURL;
+}
+
+export const isOdd = (v) => v % 2 !== 0;
+
+export const scrollToBottom = (el: HTMLElement) => {
+  const currentScrollTop = el.scrollTop;
+  const clientHeight = el.offsetHeight;
+  const scrollHeight = el.scrollHeight;
+
+  el.scrollTo(0, currentScrollTop + (scrollHeight - currentScrollTop - clientHeight));
+};

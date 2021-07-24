@@ -1,45 +1,35 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { dateFormat } from '../../utils/date.util';
+import { uniqueid } from '../../utils/uniqueid.util';
+import { Oss } from '../../utils/oss.util';
 import { SettingService } from '../setting/setting.service';
 import { File } from './file.entity';
 
-const OSS = require('ali-oss');
-
 @Injectable()
 export class FileService {
+  private oss: Oss;
+
   constructor(
     @InjectRepository(File)
     private readonly fileRepository: Repository<File>,
     private readonly settingService: SettingService
-  ) {}
+  ) {
+    this.oss = new Oss(this.settingService);
+  }
 
   /**
    * 上传文件
    * @param file
    */
-  async uploadFile(file): Promise<File> {
+  async uploadFile(file, unique): Promise<File> {
     const { originalname, mimetype, size, buffer } = file;
-    const filename = `/${dateFormat(new Date(), 'yyyy-MM-dd')}/${originalname}`;
-    const {
-      ossRegion,
-      ossAccessKeyId,
-      ossBucket,
-      ossAccessKeySecret,
-      ossHttps,
-    } = await this.settingService.findAll(true);
-    if (!ossRegion || !ossAccessKeyId || !ossBucket || !ossAccessKeySecret) {
-      throw new HttpException('请完善 OSS 配置', HttpStatus.BAD_REQUEST);
-    }
-    const client = new OSS({
-      region: ossRegion,
-      accessKeyId: ossAccessKeyId,
-      accessKeySecret: ossAccessKeySecret,
-      bucket: ossBucket,
-      secure: ossHttps,
-    });
-    const { url } = await client.put(filename, buffer);
+    const filename =
+      +unique === 1
+        ? `/${dateFormat(new Date(), 'yyyy-MM-dd')}/${uniqueid()}/${originalname}`
+        : `/${dateFormat(new Date(), 'yyyy-MM-dd')}/${originalname}`;
+    const url = await this.oss.putFile(filename, buffer);
     const newFile = await this.fileRepository.create({
       originalname,
       filename,
@@ -58,7 +48,7 @@ export class FileService {
     const query = this.fileRepository.createQueryBuilder('file').orderBy('file.createAt', 'DESC');
 
     if (typeof queryParams === 'object') {
-      const { page = 1, pageSize = 12, pass, ...otherParams } = queryParams;
+      const { page = 1, pageSize = 12, ...otherParams } = queryParams;
       query.skip((+page - 1) * +pageSize);
       query.take(+pageSize);
 
@@ -91,25 +81,8 @@ export class FileService {
    * @param id
    */
   async deleteById(id) {
-    const tag = await this.fileRepository.findOne(id);
-    const {
-      ossRegion,
-      ossAccessKeyId,
-      ossBucket,
-      ossAccessKeySecret,
-      ossHttps,
-    } = await this.settingService.findAll(true);
-    if (!ossRegion || !ossAccessKeyId || !ossBucket || !ossAccessKeySecret) {
-      throw new HttpException('请完善 OSS 配置', HttpStatus.BAD_REQUEST);
-    }
-    const client = new OSS({
-      region: ossRegion,
-      accessKeyId: ossAccessKeyId,
-      accessKeySecret: ossAccessKeySecret,
-      bucket: ossBucket,
-      secure: ossHttps,
-    });
-    await client.delete(tag.filename);
-    return this.fileRepository.remove(tag);
+    const target = await this.fileRepository.findOne(id);
+    await this.oss.deleteFile(target.filename);
+    return this.fileRepository.remove(target);
   }
 }

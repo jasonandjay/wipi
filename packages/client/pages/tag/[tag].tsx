@@ -1,16 +1,16 @@
 import React, { useState, useCallback, useEffect, useContext } from 'react';
 import { NextPage } from 'next';
-import { Icon } from 'antd';
+import { useTranslations } from 'next-intl';
 import InfiniteScroll from 'react-infinite-scroller';
 import { ArticleProvider } from '@/providers/article';
 import { TagProvider } from '@/providers/tag';
 import { GlobalContext } from '@/context/global';
 import { DoubleColumnLayout } from '@/layout/DoubleColumnLayout';
+import { Footer } from '@components/Footer';
 import { ArticleList } from '@components/ArticleList';
 import { ArticleRecommend } from '@/components/ArticleRecommend';
-import { Tags } from '@components/Tags';
 import { Categories } from '@components/Categories';
-import { Footer } from '@components/Footer';
+import { Tags } from '@components/Tags';
 import style from '../index.module.scss';
 
 interface IProps {
@@ -22,6 +22,7 @@ interface IProps {
 const pageSize = 12;
 
 const Home: NextPage<IProps> = ({ articles: defaultArticles = [], total, tag }) => {
+  const t = useTranslations();
   const { setting, tags, categories } = useContext(GlobalContext);
   const [page, setPage] = useState(1);
   const [articles, setArticles] = useState<IArticle[]>(defaultArticles);
@@ -30,57 +31,61 @@ const Home: NextPage<IProps> = ({ articles: defaultArticles = [], total, tag }) 
     setArticles(defaultArticles);
   }, [defaultArticles]);
 
-  const getArticles = useCallback((page) => {
-    ArticleProvider.getArticlesByTag(tag.value, {
-      page,
-      pageSize,
-      status: 'publish',
-    }).then((res) => {
-      setPage(page);
-      setArticles((articles) => [...articles, ...res[0]]);
-    });
-  }, []);
+  const getArticles = useCallback(
+    (page) => {
+      ArticleProvider.getArticlesByTag(tag.value, {
+        page,
+        pageSize,
+        status: 'publish',
+      }).then((res) => {
+        setPage(page);
+        setArticles((articles) => [...articles, ...res[0]]);
+      });
+    },
+    [tag.value]
+  );
 
   return (
-    <DoubleColumnLayout
-      leftNode={
-        <>
-          <div className={style.tagOrCategoryDetail}>
-            <div>
-              <Icon type="tags" />
+    <div className={style.wrapper}>
+      <DoubleColumnLayout
+        leftNode={
+          <>
+            <div className={style.tagOrCategoryDetail}>
+              <p>
+                {t('yu')} <span>{tag.label}</span> {t('tagRelativeArticles')}
+              </p>
+              <p>
+                {t('totalSearch')} <span>{total}</span> {t('piece')}
+              </p>
             </div>
-            <p>
-              与 <span>{tag.label}</span> 标签有关的文章
-            </p>
-            <p>
-              共搜索到 <span>{total}</span> 篇
-            </p>
-          </div>
-          <InfiniteScroll
-            pageStart={1}
-            loadMore={getArticles}
-            hasMore={page * pageSize < total}
-            loader={
-              <div className={'loading'} key={0}>
-                正在获取文章...
-              </div>
-            }
-          >
-            <ArticleList articles={articles} />
-          </InfiniteScroll>
-        </>
-      }
-      rightNode={
-        <>
-          <ArticleRecommend mode="inline" />
-          <div className={'sticky'}>
-            <Categories categories={categories} />
             <Tags tags={tags} />
-            <Footer className={style.footer} setting={setting} />
+            <div className={style.leftWrap}>
+              <main>
+                <InfiniteScroll
+                  pageStart={1}
+                  loadMore={getArticles}
+                  hasMore={page * pageSize < total}
+                  loader={
+                    <div className={'loading'} key={0}>
+                      {t('gettingArticle')}
+                    </div>
+                  }
+                >
+                  <ArticleList articles={articles} />
+                </InfiniteScroll>
+              </main>
+            </div>
+          </>
+        }
+        rightNode={
+          <div className="sticky">
+            <ArticleRecommend mode="inline" />
+            <Categories categories={categories} />
           </div>
-        </>
-      }
-    />
+        }
+      />
+      <Footer setting={setting} />
+    </div>
   );
 };
 

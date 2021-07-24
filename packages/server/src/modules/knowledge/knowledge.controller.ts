@@ -97,4 +97,13 @@ export class KnowledgeController {
   updateViewsById(@Param('id') id) {
     return this.service.updateViewsById(id);
   }
+
+  /**
+   * 文章访问量 +1
+   */
+  @Post(':id/likes')
+  @HttpCode(HttpStatus.OK)
+  updateLikesById(@Param('id') id, @Body('type') type) {
+    return this.service.updateLikesById(id, type);
+  }
 }

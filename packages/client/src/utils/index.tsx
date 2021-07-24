@@ -1,5 +1,3 @@
-import { message } from 'antd';
-
 const colors = ['#52c41a', '#f5222d', '#1890ff', '#faad14', '#ff0064', '#722ed1'];
 
 export const getRandomColor = (() => {
@@ -14,27 +12,14 @@ export const getRandomColor = (() => {
   };
 })();
 
-export const copy = (value) => {
-  const textarea: HTMLTextAreaElement = document.createElement('textarea');
-  textarea.id = 't';
-  textarea.style.height = '0';
-  document.body.appendChild(textarea);
-  textarea.value = value;
-  const selector: HTMLTextAreaElement = document.querySelector('#t');
-  selector.select();
-  document.execCommand('copy');
-  document.body.removeChild(textarea);
-  message.success('内容已复制到剪切板');
-};
-
 export function throttle(fn, threshhold) {
   let last;
   let timer;
   threshhold || (threshhold = 250);
 
   return function () {
-    const context = this;
-    const args = arguments;
+    const context = this; // eslint-disable-line @typescript-eslint/no-this-alias
+    const args = arguments; // eslint-disable-line prefer-rest-params
     const now = +new Date();
 
     if (last && now < last + threshhold) {
@@ -53,10 +38,10 @@ export function throttle(fn, threshhold) {
 export const isOdd = (v) => v % 2 !== 0;
 
 export function elementInViewport(el) {
-  var top = el.offsetTop;
-  var left = el.offsetLeft;
-  var width = el.offsetWidth;
-  var height = el.offsetHeight;
+  let top = el.offsetTop;
+  let left = el.offsetLeft;
+  const width = el.offsetWidth;
+  const height = el.offsetHeight;
 
   while (el.offsetParent) {
     el = el.offsetParent;
@@ -70,4 +55,22 @@ export function elementInViewport(el) {
     top + height > window.pageYOffset &&
     left + width > window.pageXOffset
   );
+}
+export function getDocumentScrollTop() {
+  return (
+    document.documentElement.scrollTop ||
+    window.pageYOffset ||
+    window.scrollY ||
+    document.body.scrollTop
+  );
+}
+
+export function download({ name, url }) {
+  const eleLink = document.createElement('a');
+  eleLink.download = name;
+  eleLink.style.display = 'none';
+  eleLink.href = url;
+  document.body.appendChild(eleLink);
+  eleLink.click();
+  document.body.removeChild(eleLink);
 }

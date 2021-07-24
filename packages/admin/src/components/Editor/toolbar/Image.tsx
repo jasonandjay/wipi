@@ -1,13 +1,14 @@
 import React from 'react';
 import { Upload, message, Tooltip } from 'antd';
 import { FileProvider } from '@/providers/file';
-import { monaco, editor } from '../MonacoEditor';
+import { monaco } from '../MonacoEditor';
 
-export const Image = () => {
+export const Image = ({ editor }) => {
   const uploadProps = {
     name: 'file',
     accept: `.jpg, .jpeg, .pjpeg, .png, .apng, .bmp, .gif, .svg, .webp`,
     multiple: false,
+    showUploadList: false,
     action: '',
     beforeUpload(file) {
       const hide = message.loading('图片上传中...', 0);
@@ -28,7 +29,7 @@ export const Image = () => {
           message.error('上传失败');
           hide();
         });
-      return Promise.reject();
+      return Promise.reject(new Error('canceld'));
     },
   };
 
@@ -38,6 +39,7 @@ export const Image = () => {
         <svg viewBox="0 0 24 24" width="16px" height="16px" style={{ marginTop: 6 }}>
           <path
             fillRule="evenodd"
+            fill="currentColor"
             d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"
           ></path>
         </svg>

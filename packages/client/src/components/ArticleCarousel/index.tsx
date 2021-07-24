@@ -1,6 +1,7 @@
 import React from 'react';
 import { Carousel } from 'antd';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { LocaleTime } from '@/components/LocaleTime';
 import style from './index.module.scss';
 
@@ -9,6 +10,7 @@ interface IProps {
 }
 
 export const ArticleCarousel: React.FC<IProps> = ({ articles = [] }) => {
+  const t = useTranslations();
   return articles && articles.length ? (
     <div className={style.wrapper}>
       <Carousel autoplay={true}>
@@ -28,10 +30,12 @@ export const ArticleCarousel: React.FC<IProps> = ({ articles = [] }) => {
                         <h2 className={style.title}>{article.title}</h2>
                         <p>
                           <span>
-                            <LocaleTime date={article.publishAt} timeago />
+                            <LocaleTime date={article.publishAt} timeago={true} />
                           </span>
                           <span className={style.seperator}>·</span>
-                          <span>{article.views} 次阅读</span>
+                          <span>
+                            {article.views} {t('readingCountTemplate')}
+                          </span>
                         </p>
                       </div>
                     </a>

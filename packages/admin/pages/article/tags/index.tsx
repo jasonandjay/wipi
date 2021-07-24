@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { NextPage } from 'next';
-import { Row, Col, Card, Button, Input, Popconfirm, List, Form, message } from 'antd';
+import { Form } from '@ant-design/compatible';
+import { Row, Col, Card, Button, Input, Popconfirm, message } from 'antd';
 import cls from 'classnames';
 import { AdminLayout } from '@/layout/AdminLayout';
 import { TagProvider } from '@/providers/tag';
@@ -32,37 +33,46 @@ const TagPage: NextPage<ITagProps> = ({ tags: defaultTags = [] }) => {
     setValue(null);
   }, []);
 
-  const addTag = useCallback((data) => {
-    if (!data || !data.label) {
-      return;
-    }
+  const addTag = useCallback(
+    (data) => {
+      if (!data || !data.label) {
+        return;
+      }
 
-    TagProvider.addTag(data).then(() => {
-      message.success('添加标签成功');
-      reset();
-      getTags();
-    });
-  }, []);
+      TagProvider.addTag(data).then(() => {
+        message.success('添加标签成功');
+        reset();
+        getTags();
+      });
+    },
+    [reset, getTags]
+  );
 
-  const updateTag = useCallback((id, data) => {
-    if (!data || !data.label) {
-      return;
-    }
+  const updateTag = useCallback(
+    (id, data) => {
+      if (!data || !data.label) {
+        return;
+      }
 
-    TagProvider.updateTag(id, data).then(() => {
-      message.success('更新标签成功');
-      reset();
-      getTags();
-    });
-  }, []);
+      TagProvider.updateTag(id, data).then(() => {
+        message.success('更新标签成功');
+        reset();
+        getTags();
+      });
+    },
+    [reset, getTags]
+  );
 
-  const deleteTag = useCallback((id) => {
-    TagProvider.deleteTag(id).then(() => {
-      message.success('删除标签成功');
-      reset();
-      getTags();
-    });
-  }, []);
+  const deleteTag = useCallback(
+    (id) => {
+      TagProvider.deleteTag(id).then(() => {
+        message.success('删除标签成功');
+        reset();
+        getTags();
+      });
+    },
+    [reset, getTags]
+  );
 
   return (
     <AdminLayout>
@@ -116,7 +126,7 @@ const TagPage: NextPage<ITagProps> = ({ tags: defaultTags = [] }) => {
                     okText="确认"
                     cancelText="取消"
                   >
-                    <Button type="danger">删除</Button>
+                    <Button danger={true}>删除</Button>
                   </Popconfirm>
                 </>
               )}

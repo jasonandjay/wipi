@@ -1,8 +1,9 @@
 import React, { useCallback, useState } from 'react';
 import { NextPage } from 'next';
 import Link from 'next/link';
-import { Row, Col, Card, List, Alert } from 'antd';
+import { Row, Col, Card, List, Alert, Typography } from 'antd';
 import { useSetting } from '@/hooks/useSetting';
+import { useUser } from '@/hooks/useUser';
 import { AdminLayout } from '@/layout/AdminLayout';
 import { ArticleProvider } from '@/providers/article';
 import { CommentProvider } from '@/providers/comment';
@@ -10,8 +11,9 @@ import { CommentArticle } from '@/components/comment/CommentArticle';
 import { CommentStatus } from '@/components/comment/CommentStatus';
 import { CommentAction } from '@/components/comment/CommentAction';
 import { CommentContent } from '@/components/comment/CommentContent';
-
 import style from './index.module.scss';
+
+const { Title, Paragraph } = Typography;
 
 interface IHomeProps {
   articles: IArticle[];
@@ -48,6 +50,7 @@ const pageSize = 6;
 
 const Home: NextPage<IHomeProps> = ({ articles = [], comments: defaultComments = [] }) => {
   const setting = useSetting();
+  const user = useUser();
   const [comments, setComments] = useState<IComment[]>(defaultComments);
 
   const getComments = useCallback(() => {
@@ -58,7 +61,14 @@ const Home: NextPage<IHomeProps> = ({ articles = [], comments: defaultComments =
   }, []);
 
   return (
-    <AdminLayout>
+    <AdminLayout
+      headerAppender={
+        <Typography>
+          <Title>您好，{user.name}</Title>
+          <Paragraph>您的角色：{user.role === 'admin' ? '管理员' : '访客'}</Paragraph>
+        </Typography>
+      }
+    >
       {!setting || !setting.systemUrl ? (
         <div style={{ marginBottom: 24 }}>
           <Alert
@@ -87,7 +97,7 @@ const Home: NextPage<IHomeProps> = ({ articles = [], comments: defaultComments =
                 }}
               >
                 <Link href={action.url}>
-                  <a target="_blank" className={style.recentArticleItem}>
+                  <a className={style.recentArticleItem}>
                     <span>{action.name}</span>
                   </a>
                 </Link>
@@ -120,7 +130,7 @@ const Home: NextPage<IHomeProps> = ({ articles = [], comments: defaultComments =
               hoverable={true}
             >
               <Link href={`/article/editor/[id]`} as={`/article/editor/` + article.id}>
-                <a target="_blank" className={style.recentArticleItem}>
+                <a className={style.recentArticleItem}>
                   <img width={120} alt="文章封面" src={article.cover} />
                   <p className={style.title}>{article.title}</p>
                 </a>
@@ -146,7 +156,7 @@ const Home: NextPage<IHomeProps> = ({ articles = [], comments: defaultComments =
           renderItem={(comment) => (
             <List.Item
               key={comment.id}
-              actions={[<CommentAction comment={comment} refresh={getComments} />]}
+              actions={[<CommentAction key="action" comment={comment} refresh={getComments} />]}
             >
               <span>{comment.name}</span> 在 <CommentArticle comment={comment} /> 评论{' '}
               <CommentContent comment={comment} />

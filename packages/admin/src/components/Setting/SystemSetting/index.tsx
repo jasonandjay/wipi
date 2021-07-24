@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Input, Button, Icon, message } from 'antd';
+import { FileImageOutlined } from '@ant-design/icons';
+import { Form } from '@ant-design/compatible';
+import { Input, Button, message } from 'antd';
 import { FileSelectDrawer } from '@/components/FileSelectDrawer';
 import { SettingProvider } from '@/providers/setting';
 
@@ -31,13 +33,13 @@ export const SystemSetting = ({ setting }) => {
       systemFooterInfo,
       adminSystemUrl,
     };
-    SettingProvider.updateSetting(data).then((res) => {
+    SettingProvider.updateSetting(data).then(() => {
       message.success('保存成功');
     });
   };
 
   return (
-    <div>
+    <Form layout="vertical">
       <Form.Item label="系统地址">
         <Input
           placeholder="请输入系统地址"
@@ -69,8 +71,7 @@ export const SystemSetting = ({ setting }) => {
         <Input
           placeholder="请输入 logo 链接或选择文件，也可输入 html"
           addonAfter={
-            <Icon
-              type="file-image"
+            <FileImageOutlined
               onClick={() => {
                 setMode('logo');
                 setVisible(true);
@@ -87,8 +88,7 @@ export const SystemSetting = ({ setting }) => {
         <Input
           placeholder="请输入 favicon 链接或选择文件"
           addonAfter={
-            <Icon
-              type="file-image"
+            <FileImageOutlined
               onClick={() => {
                 setMode('favicon');
                 setVisible(true);
@@ -111,7 +111,6 @@ export const SystemSetting = ({ setting }) => {
           }}
         />
       </Form.Item>
-
       <FileSelectDrawer
         visible={visible}
         closeAfterClick={true}
@@ -127,6 +126,6 @@ export const SystemSetting = ({ setting }) => {
       <Button type="primary" onClick={save}>
         保存
       </Button>
-    </div>
+    </Form>
   );
 };

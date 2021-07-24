@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { NextPage } from 'next';
-import { Row, Col, Card, Button, Input, Popconfirm, Form, message } from 'antd';
+import { Form } from '@ant-design/compatible';
+import { Row, Col, Card, Button, Input, Popconfirm, message } from 'antd';
 import cls from 'classnames';
 import { AdminLayout } from '@/layout/AdminLayout';
 import { CategoryProvider } from '@/providers/category';
@@ -32,37 +33,46 @@ const Page: NextPage<IProps> = ({ data: defaultData = [] }) => {
     setValue(null);
   }, []);
 
-  const addTag = useCallback((data) => {
-    if (!data || !data.label) {
-      return;
-    }
+  const addTag = useCallback(
+    (data) => {
+      if (!data || !data.label) {
+        return;
+      }
 
-    CategoryProvider.add(data).then(() => {
-      message.success('添加分类成功');
-      reset();
-      getData();
-    });
-  }, []);
+      CategoryProvider.add(data).then(() => {
+        message.success('添加分类成功');
+        reset();
+        getData();
+      });
+    },
+    [reset, getData]
+  );
 
-  const updateTag = useCallback((id, data) => {
-    if (!data || !data.label) {
-      return;
-    }
+  const updateTag = useCallback(
+    (id, data) => {
+      if (!data || !data.label) {
+        return;
+      }
 
-    CategoryProvider.update(id, data).then(() => {
-      message.success('更新分类成功');
-      reset();
-      getData();
-    });
-  }, []);
+      CategoryProvider.update(id, data).then(() => {
+        message.success('更新分类成功');
+        reset();
+        getData();
+      });
+    },
+    [reset, getData]
+  );
 
-  const deleteTag = useCallback((id) => {
-    CategoryProvider.delete(id).then(() => {
-      message.success('删除分类成功');
-      reset();
-      getData();
-    });
-  }, []);
+  const deleteTag = useCallback(
+    (id) => {
+      CategoryProvider.delete(id).then(() => {
+        message.success('删除分类成功');
+        reset();
+        getData();
+      });
+    },
+    [reset, getData]
+  );
 
   return (
     <AdminLayout>
@@ -116,7 +126,7 @@ const Page: NextPage<IProps> = ({ data: defaultData = [] }) => {
                     okText="确认"
                     cancelText="取消"
                   >
-                    <Button type="danger">删除</Button>
+                    <Button danger={true}>删除</Button>
                   </Popconfirm>
                 </>
               )}

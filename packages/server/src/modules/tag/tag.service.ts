@@ -50,8 +50,6 @@ export class TagService {
     });
 
     return data;
-
-    // return this.tagRepository.find({ order: { createAt: 'ASC' } });
   }
 
   /**
@@ -112,7 +110,12 @@ export class TagService {
    * @param id
    */
   async deleteById(id) {
-    const tag = await this.tagRepository.findOne(id);
-    return this.tagRepository.remove(tag);
+    try {
+      const tag = await this.tagRepository.findOne(id);
+      await this.tagRepository.remove(tag);
+      return true;
+    } catch (e) {
+      throw new HttpException('删除失败，可能存在关联文章', HttpStatus.BAD_REQUEST);
+    }
   }
 }

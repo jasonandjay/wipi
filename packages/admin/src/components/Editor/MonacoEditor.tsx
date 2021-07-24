@@ -1,45 +1,56 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { Spin } from 'antd';
+import React, {
+  forwardRef,
+  useRef,
+  useEffect,
+  useState,
+  useCallback,
+  useImperativeHandle,
+} from 'react';
+import { Spin, message } from 'antd';
+import { FileProvider } from '@/providers/file';
 import {
   registerScollListener,
   subjectScrollListener,
   removeScrollListener,
 } from './utils/syncScroll';
 
-declare let ResizeObserver;
-export let editor = null;
 export let monaco = null;
+const IMG_REXEXP = /^image\/(png|jpg|jpeg|gif)$/i;
 
-export const MonacoEditor = ({ defaultValue, onChange, onSave }) => {
+const _MonacoEditor = (props, ref) => {
+  const { defaultValue, onChange, onSave } = props;
   const container = useRef(null);
+  const editorRef = useRef(null);
   const [mounted, setMounted] = useState(false);
 
   const registerChange = useCallback(() => {
-    editor.onDidChangeModelContent(() => {
-      const content = editor.getValue();
+    editorRef.current.onDidChangeModelContent(() => {
+      const content = editorRef.current.getValue();
       onChange(content);
     });
-  }, [onSave]);
+  }, [onChange]);
 
   const registerScroll = useCallback(() => {
-    editor.onDidScrollChange(
+    editorRef.current.onDidScrollChange(
       registerScollListener('editor', () => {
         const top =
-          editor.getScrollTop() / (editor.getContentHeight() - editor.getLayoutInfo().height);
+          editorRef.current.getScrollTop() /
+          (editorRef.current.getContentHeight() - editorRef.current.getLayoutInfo().height);
         return {
           id: 'editor-scroll',
           top: top,
-          left: editor.getScrollLeft(),
+          left: editorRef.current.getScrollLeft(),
         };
       })
     );
   }, []);
 
   const registerSave = useCallback(() => {
-    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S, () => {
-      onSave(editor.getValue());
+    // eslint-disable-next-line no-bitwise
+    editorRef.current.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S, () => {
+      onSave(editorRef.current.getValue());
     });
-  }, []);
+  }, [onSave]);
 
   const notifyMounted = useCallback(() => {
     window.postMessage(
@@ -50,6 +61,8 @@ export const MonacoEditor = ({ defaultValue, onChange, onSave }) => {
     );
   }, []);
 
+  useImperativeHandle(ref, () => editorRef.current, [mounted]); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     Promise.all([
       import('monaco-editor/esm/vs/editor/editor.api.js'),
@@ -57,16 +70,25 @@ export const MonacoEditor = ({ defaultValue, onChange, onSave }) => {
     ]).then((res) => {
       monaco = res[0];
       const MonacoMarkdown = res[1];
-      editor = monaco.editor.create(container.current, {
+      const editor = monaco.editor.create(container.current, {
         language: 'markdown',
         automaticLayout: true,
+        wordWrap: 'on',
         theme: 'vs',
         minimap: {
           enabled: false,
         },
         scrollBeyondLastLine: false,
+        scrollbar: {
+          useShadows: false,
+          vertical: 'visible',
+          horizontal: 'visible',
+          verticalScrollbarSize: 6,
+          horizontalScrollbarSize: 6,
+        },
       });
-      var extension = new MonacoMarkdown.MonacoMarkdownExtension();
+      editorRef.current = editor;
+      const extension = new MonacoMarkdown.MonacoMarkdownExtension();
       extension.activate(editor);
       registerScroll();
       registerChange();
@@ -76,15 +98,17 @@ export const MonacoEditor = ({ defaultValue, onChange, onSave }) => {
     });
     return () => {
       setMounted(false);
-      editor && editor.dispose();
+      editorRef.current && editorRef.current.dispose();
     };
-  }, []);
+  }, [registerScroll, registerChange, registerSave, notifyMounted]);
 
   useEffect(() => {
-    if (!mounted) return;
+    if (!mounted) {
+      return undefined;
+    }
     const listener = ({ top, left }) => {
-      editor.setScrollTop(top * editor.getContentHeight());
-      editor.setScrollLeft(left);
+      editorRef.current.setScrollTop(top * editorRef.current.getContentHeight());
+      editorRef.current.setScrollLeft(left);
     };
     subjectScrollListener('editor', 'preview', listener);
     return () => {
@@ -93,20 +117,80 @@ export const MonacoEditor = ({ defaultValue, onChange, onSave }) => {
   }, [mounted]);
 
   useEffect(() => {
-    if (!mounted || !editor) return;
-    editor.setValue(defaultValue);
-  }, [mounted, defaultValue]);
+    if (!mounted) {
+      return undefined;
+    }
 
-  useEffect(() => {
-    if (!mounted || !editor) return;
-    const ro = new ResizeObserver(() => {
-      editor.layout(container.current.getBoundingClientRect());
+    const editor = editorRef.current;
+    const clearRef = {
+      current: () => {
+        return undefined;
+      },
+    };
+    editor.onDidPaste((e) => {
+      const pastePosition = e.range;
+      const delta = [
+        {
+          range: new monaco.Range(
+            pastePosition.startLineNumber,
+            pastePosition.startColumn,
+            pastePosition.endLineNumber,
+            pastePosition.endColumn
+          ),
+          text: ``,
+        },
+      ];
+      clearRef.current = () => {
+        editor.executeEdits('', delta);
+      };
     });
-    ro.observe(container.current);
+
+    const onPaste = async (e) => {
+      const selection = editor.getSelection();
+      const items = e.clipboardData.items;
+      const imgFiles = (Array.from(items) as [DataTransferItem])
+        .filter((item) => item.type.match(IMG_REXEXP))
+        .map((item) => item.getAsFile());
+      if (!imgFiles.length) {
+        return;
+      }
+      const hide = message.loading('正在上传图片中', 0);
+      const upload = (file) => {
+        return FileProvider.uploadFile(file, 1).then(({ url }) => {
+          const delta = [
+            {
+              range: new monaco.Range(
+                selection.endLineNumber,
+                selection.endColumn,
+                selection.endLineNumber,
+                selection.endColumn
+              ),
+              text: `![${file.name}](${url})`,
+            },
+          ];
+          editor.executeEdits('', delta);
+          const { endLineNumber, endColumn } = editor.getSelection();
+          editor.setPosition({ lineNumber: endLineNumber, column: endColumn });
+        });
+      };
+      await Promise.all(imgFiles.map(upload));
+      hide();
+      clearRef.current();
+    };
+
+    window.addEventListener('paste', onPaste);
+
     return () => {
-      ro.disconnect();
+      window.removeEventListener('paste', onPaste);
     };
   }, [mounted]);
+
+  useEffect(() => {
+    if (!mounted || !editorRef.current) {
+      return;
+    }
+    editorRef.current.setValue(defaultValue);
+  }, [mounted, defaultValue]);
 
   return (
     <div ref={container} style={{ height: '100%', overflow: 'hidden' }}>
@@ -114,3 +198,5 @@ export const MonacoEditor = ({ defaultValue, onChange, onSave }) => {
     </div>
   );
 };
+
+export const MonacoEditor = forwardRef(_MonacoEditor);

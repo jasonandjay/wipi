@@ -19,12 +19,23 @@ export const KnowledgeSettingDrawer = ({ visible, toggleVisible, book = null, on
   const ok = useCallback(() => {
     const data = { title: title.trim(), cover, summary: summary.trim(), isCommentable };
     const promise = isUpdate ? updateBookApi(book.id, data) : createBookApi(data);
-    promise.then(() => {
+    promise.then((res) => {
       message.success(isUpdate ? '更新成功' : '创建成功');
       toggleVisible();
-      onOk();
+      onOk(res);
     });
-  }, [title, summary, isCommentable, cover, onOk]);
+  }, [
+    title,
+    summary,
+    isCommentable,
+    cover,
+    isUpdate,
+    updateBookApi,
+    createBookApi,
+    book,
+    toggleVisible,
+    onOk,
+  ]);
 
   useEffect(() => {
     setTitle((book && book.title) || '');
@@ -82,7 +93,7 @@ export const KnowledgeSettingDrawer = ({ visible, toggleVisible, book = null, on
           {cover && (
             <Button
               style={{ marginTop: 12, marginLeft: 12 }}
-              type="danger"
+              danger={true}
               onClick={() => setCover('')}
             >
               移除

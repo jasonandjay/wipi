@@ -1,14 +1,15 @@
 import React from 'react';
 import { Upload, message, Tooltip } from 'antd';
 import { FileProvider } from '@/providers/file';
-import { monaco, editor } from '../MonacoEditor';
+import { monaco } from '../MonacoEditor';
 
-export const Video = () => {
+export const Video = ({ editor }) => {
   const uploadProps = {
     name: 'file',
     multiple: false,
     accept: `.mp4, .mov, .wmv, .flv, .avi, .webm, .mkv, .avchd`,
     action: '',
+    showUploadList: false,
     beforeUpload(file) {
       const hide = message.loading('视频上传中...', 0);
       FileProvider.uploadFile(file)
@@ -28,7 +29,7 @@ export const Video = () => {
           message.error('上传失败');
           hide();
         });
-      return Promise.reject();
+      return Promise.reject(new Error('canceld'));
     },
   };
 
@@ -38,6 +39,7 @@ export const Video = () => {
         <svg viewBox="0 0 24 24" width="16px" height="16px" style={{ marginTop: 6 }}>
           <path
             fillRule="evenodd"
+            fill="currentColor"
             d="M21 19c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V5c0-1.1.9-2 2-2h14c1.1 0 2 .9 2 2v14zm-5-7L9 8v8l7-4z"
           ></path>
         </svg>

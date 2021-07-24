@@ -3,6 +3,7 @@ interface IUser {
   avatar: string;
   email: string;
   token: string;
+  role: 'admin' | 'visitor';
 }
 
 interface IFile {
@@ -30,6 +31,7 @@ interface IArticle {
   needPassword: boolean;
   isRecommended?: boolean;
   isCommentable?: boolean; // 是否可评论
+  likes: number;
   createAt: string;
   updateAt: string;
   publishAt: string;
@@ -130,6 +132,7 @@ interface ISearch {
 }
 
 interface ISetting {
+  i18n?: string; // 国际化
   systemUrl?: string; // 系统地址
   systemTitle?: string; // 系统标题
   systemLogo?: string; // 系统 Logo
@@ -149,9 +152,20 @@ interface ISetting {
   ossHttps?: boolean; //  阿里云 oss 是否开启 https
   ossBucket?: string; //  阿里云 bucket
 
+  oss?: string; // oss 上传配置
+
   smtpHost?: string; //   SMTP 地址
   smtpPort?: number; //  SMTP 端口
   smtpUser?: string; //  SMTP 用户
   smtpPass?: string; //  SMTP 授权码
   smtpFromUser?: string; // SMTP 发件人
+}
+
+interface IPoster {
+  id: string;
+  name: string;
+  pageUrl: string;
+  imgUrl: string;
+  size: number;
+  createAt: string;
 }

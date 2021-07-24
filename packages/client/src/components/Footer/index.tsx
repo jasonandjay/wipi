@@ -1,5 +1,6 @@
 import React from 'react';
-import { Icon } from 'antd';
+import cls from 'classnames';
+import Icon, { GithubOutlined } from '@ant-design/icons';
 import style from './index.module.scss';
 
 const RSS = () => {
@@ -29,7 +30,7 @@ const RSS = () => {
 
 export const Footer = ({ setting, className = '' }) => {
   return (
-    <footer className={className}>
+    <footer className={cls(style.footer, className)}>
       <ul className={style.icons}>
         <li>
           <a className={style.github} href="/rss" target="_blank">
@@ -37,8 +38,13 @@ export const Footer = ({ setting, className = '' }) => {
           </a>
         </li>
         <li>
-          <a className={style.github} href="https://github.com/fantasticit/wipi" target="_blank">
-            <Icon type="github" />
+          <a
+            className={style.github}
+            href="https://github.com/fantasticit/wipi"
+            target="_blank"
+            rel="noreferrer"
+          >
+            <GithubOutlined />
           </a>
         </li>
       </ul>

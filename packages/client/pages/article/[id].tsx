@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useCallback, useContext } from 'react';
+import React, { useState, useEffect, useCallback, useContext, useRef } from 'react';
 import { Helmet } from 'react-helmet';
 import { NextPage } from 'next';
-import Router from 'next/router';
+import { default as Router } from 'next/router';
 import Link from 'next/link';
-import { Icon, Modal, Form, Input, message } from 'antd';
-import cls from 'classnames';
+import { useTranslations } from 'next-intl';
+import { Modal, Form, Input, message } from 'antd';
+import { TagOutlined } from '@ant-design/icons';
 import { GlobalContext } from '@/context/global';
 import { DoubleColumnLayout } from '@/layout/DoubleColumnLayout';
 import { ArticleProvider } from '@/providers/article';
@@ -22,23 +23,24 @@ interface IProps {
 }
 
 const Article: NextPage<IProps> = ({ article }) => {
+  const t = useTranslations();
   const { setting } = useContext(GlobalContext);
-  const [password, setPassword] = useState(null);
+  const passwdRef = useRef(null);
   const [shouldCheckPassWord, setShouldCheckPassword] = useState(article && article.needPassword);
-  const tocs = article.toc ? JSON.parse(article.toc) : [];
+  const tocs = article && article.toc ? JSON.parse(article.toc) : [];
 
   // 检查文章密码
   const checkPassWord = useCallback(() => {
-    ArticleProvider.checkPassword(article.id, password).then((res) => {
+    ArticleProvider.checkPassword(article.id, passwdRef.current).then((res) => {
       if (res.pass) {
         Object.assign(article, res);
         setShouldCheckPassword(false);
       } else {
-        message.error('密码错误');
+        message.error(t('wrongPasswd'));
         setShouldCheckPassword(true);
       }
     });
-  }, [article.id, password]);
+  }, [t, article]);
 
   const back = useCallback(() => {
     Router.push('/');
@@ -46,18 +48,17 @@ const Article: NextPage<IProps> = ({ article }) => {
 
   const checkPassWordModal = (
     <Modal
-      title="文章受保护，请输入访问密码"
-      cancelText={'回首页'}
-      okText={'确认'}
+      title={t('protectedArticleMsg')}
+      cancelText={t('backHome')}
+      okText={t('confirm')}
       visible={shouldCheckPassWord}
       onOk={checkPassWord}
       onCancel={back}
     >
-      <Form.Item label={'密码'}>
+      <Form.Item label={t('passwd')}>
         <Input.Password
-          value={password}
           onChange={(e) => {
-            setPassword(e.target.value);
+            passwdRef.current = e.target.value;
           }}
         />
       </Form.Item>
@@ -66,20 +67,20 @@ const Article: NextPage<IProps> = ({ article }) => {
 
   useEffect(() => {
     setShouldCheckPassword(article && article.needPassword);
-  }, [article.id]);
+  }, [article]);
 
   // 更新阅读量
   useEffect(() => {
     if (!shouldCheckPassWord) {
       ArticleProvider.updateArticleViews(article.id);
     }
-  }, [shouldCheckPassWord]);
+  }, [shouldCheckPassWord, article]);
 
   const Content = (
     <>
       {checkPassWordModal}
       <Helmet>
-        <title>{(article.title || '未知标题') + ' | ' + setting.systemTitle}</title>
+        <title>{(article.title || t('unknownTitle')) + ' | ' + setting.systemTitle}</title>
       </Helmet>
       <ImageViewer containerSelector="#js-article-wrapper">
         <article id="js-article-wrapper" className={style.articleWrap}>
@@ -101,7 +102,7 @@ const Article: NextPage<IProps> = ({ article }) => {
           {/* S 文章封面 */}
           {article.cover && (
             <div className={style.coverWrapper}>
-              <img src={article.cover} alt="文章封面" />
+              <img src={article.cover} alt={t('articleCover') as string} />
             </div>
           )}
           {/* E 文章封面 */}
@@ -111,11 +112,13 @@ const Article: NextPage<IProps> = ({ article }) => {
             <h1 className={style.title}>{article.title}</h1>
             <p className={style.desc}>
               <span>
-                发布于
+                {t('publishAt')}
                 <LocaleTime date={article.publishAt} />
               </span>
               <span> • </span>
-              <span>阅读量 {article.views}</span>
+              <span>
+                {t('readings')} {article.views}
+              </span>
             </p>
           </div>
           {/* E 文章元信息 */}
@@ -128,10 +131,14 @@ const Article: NextPage<IProps> = ({ article }) => {
           <div className={style.footerInfoWrap}>
             {/* S 文章版权 */}
             <div className={style.copyrightInfo}>
-              发布时间：
-              <LocaleTime date={article.publishAt} /> | 版权信息：
-              <a href="https://creativecommons.org/licenses/by-nc/3.0/cn/deed.zh" target="_blank">
-                非商用-署名-自由转载
+              {t('publishAt')}
+              <LocaleTime date={article.publishAt} /> | {t('copyrightInfo')}：
+              <a
+                href="https://creativecommons.org/licenses/by-nc/3.0/cn/deed.zh"
+                target="_blank"
+                rel="noreferrer"
+              >
+                {t('copyrightContent')}
               </a>
             </div>
             {/* E 文章版权 */}
@@ -145,7 +152,7 @@ const Article: NextPage<IProps> = ({ article }) => {
                       <div className={style.tag}>
                         <Link href={'/tag/[tag]'} as={'/tag/' + tag.value} scroll={false}>
                           <a>
-                            <Icon type="tag" />
+                            <TagOutlined />
                             <span>{tag.label}</span>
                           </a>
                         </Link>
@@ -163,8 +170,8 @@ const Article: NextPage<IProps> = ({ article }) => {
         {/* S 文章评论 */}
         {article.isCommentable && (
           <div className={style.commentWrap}>
-            <p className={style.title}>评论</p>
-            <Comment hostId={article.id} />
+            <p className={style.title}>{t('comment')}</p>
+            <Comment key={article.id} hostId={article.id} />
           </div>
         )}
         {/* E 文章评论 */}
@@ -172,20 +179,35 @@ const Article: NextPage<IProps> = ({ article }) => {
     </>
   );
 
-  const Aside = article.toc ? (
-    <>
-      <ArticleRecommend articleId={article.id} mode="inline" />
-      <div className={'sticky'}>
-        {tocs && tocs.length ? <Toc tocs={tocs} maxHeight={'80vh'} /> : null}
-      </div>
-    </>
-  ) : (
+  const Aside = (
     <div className={'sticky'}>
       <ArticleRecommend articleId={article.id} mode="inline" />
+      {tocs && tocs.length ? <Toc key={article.id} tocs={tocs} maxHeight={'80vh'} /> : null}
     </div>
   );
 
-  return <DoubleColumnLayout leftNode={Content} rightNode={Aside} />;
+  return (
+    <DoubleColumnLayout
+      leftNode={Content}
+      rightNode={Aside}
+      likesProps={{
+        defaultCount: article.likes,
+        id: article.id,
+        api: (id, type) => ArticleProvider.updateArticleLikes(id, type).then((res) => res.likes),
+      }}
+      showComment={article.isCommentable}
+      shareProps={
+        shouldCheckPassWord
+          ? null
+          : {
+              cover: article.cover,
+              title: article.title,
+              desc: article.summary,
+              url: `/article/${article.id}`,
+            }
+      }
+    />
+  );
 };
 
 Article.getInitialProps = async (ctx) => {

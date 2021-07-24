@@ -1,52 +1,81 @@
 import React from 'react';
 import Link from 'next/link';
-import cls from 'classnames';
+import { useTranslations } from 'next-intl';
+import { Divider } from 'antd';
+import { EyeOutlined, ShareAltOutlined } from '@ant-design/icons';
 import LazyLoad from 'react-lazyload';
+import { Opacity } from '@/components/Animation/Opacity';
 import { LocaleTime } from '@/components/LocaleTime';
+import { Share } from '@/components/Share';
 import style from './index.module.scss';
 
 interface IProps {
   knowledges: IKnowledge[];
-  isBoxshadowed?: boolean;
 }
 
-export const KnowledgeList: React.FC<IProps> = ({ knowledges = [], isBoxshadowed = true }) => {
+export const KnowledgeList: React.FC<IProps> = ({ knowledges = [] }) => {
+  const t = useTranslations();
   return (
-    <div style={{ width: '100%' }} className={cls(style.wrapper)}>
+    <div className={style.wrapper}>
       {knowledges && knowledges.length ? (
         knowledges.map((knowledge) => {
           return (
-            <Link
-              key={knowledge.id}
-              href={`/knowledge/[pId]`}
-              as={`/knowledge/${knowledge.id}`}
-              scroll={false}
-            >
-              <a className={cls(style.articleItem, isBoxshadowed && style.isBoxshadowed)}>
-                {knowledge.cover && (
-                  <LazyLoad height={110}>
-                    <div className={style.coverWrapper}>
-                      <img src={knowledge.cover} alt="cover" />
-                    </div>
-                  </LazyLoad>
-                )}
-                <div className={style.infoWrapper}>
-                  <p className={style.title}>{knowledge.title}</p>
-                  <p className={style.desc}>{knowledge.summary}</p>
-                  <div className={style.meta}>
-                    <span>{knowledge.views} 次阅读</span>
-                    <span className={style.seperator}>·</span>
-                    <span className={style.pullRight}>
-                      <LocaleTime date={knowledge.publishAt} timeago />
-                    </span>
-                  </div>
-                </div>
-              </a>
-            </Link>
+            <div key={knowledge.id} className={style.articleItem}>
+              <Opacity>
+                <Link
+                  key={knowledge.id}
+                  href={`/knowledge/[pId]`}
+                  as={`/knowledge/${knowledge.id}`}
+                  scroll={false}
+                >
+                  <a>
+                    <header>
+                      <div className={style.title}>{knowledge.title}</div>
+                      <div className={style.info}>
+                        <Divider type="vertical" />
+                        <span className={style.time}>
+                          <LocaleTime date={knowledge.publishAt} timeago={true} />
+                        </span>
+                      </div>
+                    </header>
+                    <main>
+                      {knowledge.cover && (
+                        <LazyLoad height={120}>
+                          <div className={style.coverWrapper}>
+                            <img src={knowledge.cover} alt="cover" />
+                          </div>
+                        </LazyLoad>
+                      )}
+                      <div className={style.contentWrapper}>
+                        <div className={style.desc}>{knowledge.summary}</div>
+                        <div className={style.meta}>
+                          <span>
+                            <EyeOutlined />
+                            <span className={style.number}>{knowledge.views}</span>
+                          </span>
+                          <span className={style.seperator}>·</span>
+                          <Share
+                            cover={knowledge.cover}
+                            title={knowledge.title}
+                            desc={knowledge.summary}
+                            url={`/knowledge/${knowledge.id}`}
+                          >
+                            <span>
+                              <ShareAltOutlined />
+                              <span className={style.number}>{t('share')}</span>
+                            </span>
+                          </Share>
+                        </div>
+                      </div>
+                    </main>
+                  </a>
+                </Link>
+              </Opacity>
+            </div>
           );
         })
       ) : (
-        <div className={'empty'}>暂无数据</div>
+        <div className={'empty'}>{t('empty')}</div>
       )}
     </div>
   );

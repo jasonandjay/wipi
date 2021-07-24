@@ -1,16 +1,34 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { UserService } from '../user/user.service';
+import * as merge from 'deepmerge';
 import { Setting } from './setting.entity';
-import { UNPROTECTED_KEYS } from './setting.constant';
+import { UNPROTECTED_KEYS, i18n } from './setting.constant';
 
 @Injectable()
 export class SettingService {
   constructor(
     @InjectRepository(Setting)
     private readonly settingRepository: Repository<Setting>
-  ) {}
+  ) {
+    this.initI18n();
+  }
+
+  /**
+   * 初始化时加载 i18n 配置
+   */
+  async initI18n() {
+    const items = await this.settingRepository.find();
+    const target = (items && items[0]) || ({} as Setting);
+    let data = {};
+    try {
+      data = JSON.parse(target.i18n);
+    } catch (e) {
+      data = {};
+    }
+    target.i18n = JSON.stringify(merge({}, i18n, data));
+    await this.settingRepository.save(target);
+  }
 
   /**
    *

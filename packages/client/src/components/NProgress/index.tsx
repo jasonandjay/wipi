@@ -1,12 +1,12 @@
 import React from 'react';
 import _NProgress from 'nprogress';
-import Router from 'next/router';
+import { default as Router } from 'next/router';
 
 interface IProps {
   showAfterMs: number;
   color: string;
   spinner: boolean;
-  options?: object;
+  options?: Record<string, unknown>;
 }
 
 export class NProgress extends React.Component<IProps> {

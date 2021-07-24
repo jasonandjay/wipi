@@ -1,86 +1,60 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import cls from 'classnames';
-import Router from 'next/router';
-import { Spin, Input, Icon } from 'antd';
+import { Input } from 'antd';
+import { CloseOutlined } from '@ant-design/icons';
 import Link from 'next/link';
-import { CSSTransition, TransitionGroup } from 'react-transition-group';
+import { useTranslations } from 'next-intl';
+import { useAsyncLoading } from '@/hooks/useAsyncLoading';
 import { SearchProvider } from '@/providers/search';
-import { TagProvider } from '@/providers/tag';
-import { Tags } from '@components/Tags';
-import style from './index.module.scss';
+import { Spring } from '@/components/Animation/Spring';
+import { ListTrail } from '@/components/Animation/Trail';
+import styles from './index.module.scss';
 
 const { Search: AntdSearch } = Input;
 
 interface IProps {
   visible: boolean;
-  onClose: () => void;
+  tags: ITag[];
+  onClose: (arg: boolean) => void;
 }
 
 export const Search: React.FC<IProps> = ({ visible = true, onClose }) => {
   const ref = useRef(null);
-  const container = useRef(null);
-  const [tags, setTags] = useState([]);
+  const t = useTranslations();
+  const [searchArticles, loading] = useAsyncLoading(SearchProvider.searchArticles);
   const [articles, setArticles] = useState<IArticle[]>([]);
-  const [loading, setLoading] = useState(false);
-
   const close = useCallback(() => {
     document.body.style.overflow = '';
-    onClose();
-  }, []);
+    document.body.style.width = '';
+    setArticles([]);
+    onClose(false);
+  }, [onClose]);
 
-  const getArticles = useCallback((keyword) => {
-    if (!keyword) {
-      setArticles([]);
-      return;
-    }
-
-    setLoading(true);
-    SearchProvider.searchArticles(keyword)
-      .then((res) => {
+  const getArticles = useCallback(
+    (keyword) => {
+      if (!keyword) {
+        setArticles([]);
+        return;
+      }
+      searchArticles(keyword).then((res) => {
         const ret = res.filter((r) => r.status === 'publish' && !r.needPassword);
         setArticles(ret);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
-
-  useEffect(() => {
-    TagProvider.getTags({ articleStatus: 'publish' }).then((res) => {
-      setTags(res);
-    });
-  }, []);
+      });
+    },
+    [searchArticles]
+  );
 
   useEffect(() => {
     const listener = (e) => {
-      const el = container.current;
-      if (el && !el.contains(e.target)) {
-        close();
-      }
-    };
-    const listener2 = (e) => {
-      // ESC
       if (e.which === 27 || e.keyCode === 27) {
         close();
       }
     };
-    document.body.addEventListener('click', listener);
-    document.body.addEventListener('touchend', listener);
-    document.body.addEventListener('keydown', listener2);
+    document.body.addEventListener('keydown', listener);
 
     return () => {
-      document.body.removeEventListener('click', listener);
-      document.body.removeEventListener('touchend', listener);
-      document.body.removeEventListener('keydown', listener2);
+      document.body.removeEventListener('keydown', listener);
     };
-  }, []);
-
-  useEffect(() => {
-    Router.events.on('routeChangeStart', close);
-
-    return () => {
-      Router.events.off('routeChangeStart', close);
-    };
-  }, []);
+  }, [close]);
 
   useEffect(() => {
     if (!visible || !ref.current) {
@@ -88,57 +62,66 @@ export const Search: React.FC<IProps> = ({ visible = true, onClose }) => {
     }
     ref.current.focus();
     document.body.style.overflow = 'hidden';
+    document.body.style.width = 'calc(100% - 6px)';
   }, [visible]);
 
+  if (!visible) {
+    return null;
+  }
+
   return (
-    <>
-      {visible ? (
-        <div className={cls(style.wrapper)} ref={container}>
-          <div className={cls('container', style.innerWrapper)}>
-            <Icon className={style.closeBtn} type="close" onClick={close} />
+    <div className={styles.wrapper}>
+      <Spring from={{ y: 20 }} to={{ y: 0 }}>
+        <div className="container">
+          <header>
+            <span className={styles.title}>{t('searchArticle')}</span>
+            <span className={styles.btnWrapper} onClick={close}>
+              <CloseOutlined />
+              <span>esc</span>
+            </span>
+          </header>
+
+          <section>
             <AntdSearch
               ref={ref}
               size="large"
-              placeholder="输入关键字，搜索文章"
-              onChange={(evt) => getArticles(evt.target.value)}
+              loading={loading}
+              placeholder={t('searchArticlePlaceholder') as string}
+              onSearch={getArticles}
               style={{ width: '100%' }}
             />
-            <div className={style.tagWrapper}>
-              <Tags tags={tags} needTitle={false} style={{ marginBottom: 0, boxShadow: 'none' }} />
-            </div>
-            {loading && (
-              <div className={style.loading}>
-                <Spin tip="正在搜索中..." spinning={true} />
-              </div>
-            )}
-            <div
-              className={cls(
-                style.articleWrapper,
-                articles && articles.length ? style.active : false
-              )}
-            >
-              <TransitionGroup className="todo-list">
-                {articles.map((article, idx) => {
+          </section>
+
+          <section>
+            <ul>
+              <ListTrail
+                length={articles.length}
+                options={{
+                  config: { mass: 1, tension: 180, friction: 12, clamp: true },
+                  opacity: loading ? 0 : 1,
+                  height: loading ? 0 : 48,
+                  from: { opacity: 0, height: 0 },
+                }}
+                renderItem={(index) => {
+                  const article = articles[index];
                   return (
-                    <CSSTransition key={article.id} timeout={300} classNames="item">
-                      <Link
-                        key={article.id}
-                        href={`/article/[id]`}
-                        as={`/article/${article.id}`}
-                        scroll={false}
-                      >
-                        <a className={style.articleListItem}>
-                          <span className={style.title}>{article.title}</span>
-                        </a>
-                      </Link>
-                    </CSSTransition>
+                    <Link
+                      key={article.id}
+                      href={`/article/[id]`}
+                      as={`/article/${article.id}`}
+                      scroll={false}
+                    >
+                      <a className={styles.item} onClick={close}>
+                        {article.title}
+                      </a>
+                    </Link>
                   );
-                })}
-              </TransitionGroup>
-            </div>
-          </div>
+                }}
+              />
+            </ul>
+          </section>
         </div>
-      ) : null}
-    </>
+      </Spring>
+    </div>
   );
 };

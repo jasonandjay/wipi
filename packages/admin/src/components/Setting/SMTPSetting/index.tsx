@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Form, Input, Button, message } from 'antd';
+import { Form } from '@ant-design/compatible';
+import { Input, Button, message } from 'antd';
 import { SettingProvider } from '@/providers/setting';
 import { SMTPProvider } from '@/providers/smtp';
 
@@ -26,7 +27,7 @@ export const SMTPSetting = ({ setting }) => {
       smtpPass,
       smtpFromUser,
     };
-    SettingProvider.updateSetting(data).then((res) => {
+    SettingProvider.updateSetting(data).then(() => {
       message.success('保存成功');
     });
   };
@@ -42,7 +43,7 @@ export const SMTPSetting = ({ setting }) => {
   }, [smtpFromUser]);
 
   return (
-    <div>
+    <Form layout="vertical">
       <Form.Item label="SMTP 地址">
         <Input
           placeholder="请输入SMTP"
@@ -52,7 +53,7 @@ export const SMTPSetting = ({ setting }) => {
           }}
         />
       </Form.Item>
-      <Form.Item label="SMTP 端口（注意强制使用 SSL 连接）">
+      <Form.Item label="SMTP 端口（强制使用 SSL 连接）">
         <Input
           placeholder="请输入SMTP 端口"
           value={smtpPort}
@@ -94,6 +95,6 @@ export const SMTPSetting = ({ setting }) => {
       <Button style={{ marginLeft: 16 }} onClick={test}>
         测试
       </Button>
-    </div>
+    </Form>
   );
 };

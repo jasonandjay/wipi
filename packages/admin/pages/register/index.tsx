@@ -1,12 +1,12 @@
 import React, { useCallback, useState } from 'react';
-import { Row, Col, Form, Button, Input, Icon, Modal } from 'antd';
-import Router from 'next/router';
+import { Form } from '@ant-design/compatible';
+import { Row, Col, Button, Input, Modal } from 'antd';
+import { default as Router } from 'next/router';
 import Link from 'next/link';
 import { Helmet } from 'react-helmet';
-import { Seo } from '@/components/Seo';
-import { FormComponentProps } from 'antd/es/form';
+import { FormComponentProps } from '@ant-design/compatible/es/form';
 import { UserProvider } from '@/providers/user';
-import { Svg } from '@/components/RegisterSvg';
+import { Svg } from '@/assets/RegisterSvg';
 import style from './index.module.scss';
 
 type IProps = FormComponentProps;
@@ -30,34 +30,38 @@ const _Register: React.FC<IProps> = ({ form }) => {
     callback();
   };
 
-  const submit = useCallback((e) => {
-    e.preventDefault();
-    form.validateFields((err, values) => {
-      if (!err) {
-        setLoading(true);
-        UserProvider.register(values)
-          .then(() => {
-            Modal.confirm({
-              title: '注册成功',
-              content: '是否跳转至登录?',
-              okText: '确认',
-              cancelText: '取消',
-              onOk() {
-                Router.push('/login');
-              },
-              onCancel() {
-                console.log('Cancel');
-              },
-            });
-          })
-          .catch((e) => setLoading(false));
-      }
-    });
-  }, []);
+  const submit = useCallback(
+    (e) => {
+      e.preventDefault();
+      form.validateFields((err, values) => {
+        if (!err) {
+          setLoading(true);
+          UserProvider.register(values)
+            .then(() => {
+              Modal.confirm({
+                title: '注册成功',
+                content: '是否跳转至登录?',
+                okText: '确认',
+                cancelText: '取消',
+                onOk() {
+                  Router.push('/login');
+                },
+                onCancel() {
+                  console.log('Cancel');
+                },
+                transitionName: '',
+                maskTransitionName: '',
+              });
+            })
+            .catch(() => setLoading(false));
+        }
+      });
+    },
+    [form]
+  );
 
   return (
     <div className={style.wrapper}>
-      <Seo />
       <Helmet>
         <title>访客注册</title>
       </Helmet>
@@ -68,18 +72,11 @@ const _Register: React.FC<IProps> = ({ form }) => {
         <Col xs={24} sm={24} md={12}>
           <div style={{ width: '100%' }}>
             <h2>访客注册</h2>
-            <Form onSubmit={submit}>
+            <Form layout="horizontal" onSubmit={submit}>
               <Form.Item hasFeedback={true} label="账户">
                 {getFieldDecorator('name', {
                   rules: [{ required: true, message: '请输入用户名！' }],
-                })(
-                  <Input
-                    prefix={<Icon type="user" style={{ color: 'rgba(0,0,0,.25)' }} />}
-                    autoComplete={'off'}
-                    size="large"
-                    placeholder="请输入用户名"
-                  />
-                )}
+                })(<Input autoComplete={'off'} placeholder="请输入用户名" />)}
               </Form.Item>
               <Form.Item hasFeedback={true} label="密码">
                 {getFieldDecorator('password', {
@@ -90,17 +87,9 @@ const _Register: React.FC<IProps> = ({ form }) => {
                       validator: validateToNextPassword,
                     },
                   ],
-                })(
-                  <Input
-                    prefix={<Icon type="password" style={{ color: 'rgba(0,0,0,.25)' }} />}
-                    autoComplete={'off'}
-                    type="password"
-                    size="large"
-                    placeholder="请输入密码"
-                  />
-                )}
+                })(<Input autoComplete={'off'} type="password" placeholder="请输入密码" />)}
               </Form.Item>
-              <Form.Item hasFeedback={true} label="确认密码">
+              <Form.Item hasFeedback={true} label="确认">
                 {getFieldDecorator('confirm', {
                   rules: [
                     { required: true, message: '请再次输入密码！' },
@@ -109,15 +98,7 @@ const _Register: React.FC<IProps> = ({ form }) => {
                       validator: compareToFirstPassword,
                     },
                   ],
-                })(
-                  <Input
-                    prefix={<Icon type="lock" style={{ color: 'rgba(0,0,0,.25)' }} />}
-                    autoComplete={'off'}
-                    type="password"
-                    size="large"
-                    placeholder="请再次输入密码"
-                  />
-                )}
+                })(<Input autoComplete={'off'} type="password" placeholder="请再次输入密码" />)}
               </Form.Item>
               <Form.Item>
                 <Button

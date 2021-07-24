@@ -1,4 +1,3 @@
-import React from 'react';
 import { NextPage } from 'next';
 import RSS from '@/rss/index.js';
 import { ArticleProvider } from '@/providers/article';
@@ -15,7 +14,7 @@ Rss.getInitialProps = async (ctx) => {
   const { res } = ctx;
   res.setHeader('Content-Type', 'text/xml');
 
-  let [[articles], setting, categories] = await Promise.all([
+  const [[articles], setting, categories] = await Promise.all([
     ArticleProvider.getArticles({
       page: 1,
       pageSize: 99999,
@@ -40,7 +39,7 @@ Rss.getInitialProps = async (ctx) => {
   articles.forEach((article) => {
     feed.item({
       title: article.title,
-      description: article.summary,
+      description: article.html || article.content,
       url: url.resolve(setting.systemUrl, 'article/' + article.id),
       date: article.publishAt,
       categories: [(article.category || {}).label],

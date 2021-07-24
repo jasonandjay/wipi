@@ -2,7 +2,7 @@
   "name": "@wipi/server",
   "version": "0.0.1",
   "description": "",
-  "author": "fantasticit <zhxuc7@163.com>",
+  "author": "fantasticit <fantasticit@163.com>",
   "license": "MIT",
   "scripts": {
     "prebuild": "rimraf dist",
@@ -10,7 +10,7 @@
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "dev": "nest start --watch",
     "debug": "nest start --debug --watch",
-    "start": "node dist/main",
+    "start": "cross-env NODE_ENV=production node dist/main",
     "pm2": "pm2 start npm --name server -- start",
     "lint": "tslint -p tsconfig.json -c tslint.json",
     "test": "jest",
@@ -20,7 +20,6 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
-    "@elastic/elasticsearch": "^7.5.1",
     "@nestjs/common": "^6.7.2",
     "@nestjs/config": "^0.6.3",
     "@nestjs/core": "^6.7.2",
@@ -32,14 +31,18 @@
     "@nestjs/typeorm": "^6.2.0",
     "ali-oss": "^6.5.1",
     "bcryptjs": "^2.4.3",
+    "body-parser": "^1.19.0",
     "class-transformer": "^0.2.3",
     "compression": "^1.7.4",
+    "cross-env": "^7.0.3",
     "date-fns": "^2.17.0",
+    "deepmerge": "^4.2.2",
     "dotenv": "^8.2.0",
     "express-rate-limit": "^5.0.0",
-    "fs-extra": "^8.1.0",
+    "fs-extra": "^10.0.0",
     "helmet": "^3.21.2",
     "highlight.js": "^9.18.0",
+    "lodash": "^4.17.21",
     "log4js": "^6.1.0",
     "marked": "^0.8.0",
     "mysql": "^2.18.0",
@@ -49,6 +52,7 @@
     "nuid": "^1.1.0",
     "passport": "^0.4.1",
     "passport-jwt": "^4.0.0",
+    "puppeteer": "^10.0.0",
     "react-helmet": "^5.2.1",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.0",
@@ -57,7 +61,7 @@
     "swagger-ui-express": "^4.1.6",
     "trim-html": "^0.1.9",
     "typeorm": "^0.2.22",
-    "ua-parser-js": "^0.7.21"
+    "ua-parser-js": "^0.7.28"
   },
   "devDependencies": {
     "@nestjs/cli": "^6.9.0",

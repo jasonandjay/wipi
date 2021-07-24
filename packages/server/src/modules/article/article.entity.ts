@@ -43,20 +43,12 @@ export class Article {
   toc: string; // 格式化内容索引，自动生成
 
   @ApiProperty()
-  @ManyToOne(
-    () => Category,
-    (category) => category.articles,
-    { cascade: true }
-  )
+  @ManyToOne(() => Category, (category) => category.articles, { cascade: true })
   @JoinTable()
   category: Category;
 
   @ApiProperty()
-  @ManyToMany(
-    () => Tag,
-    (tag) => tag.articles,
-    { cascade: true }
-  )
+  @ManyToMany(() => Tag, (tag) => tag.articles, { cascade: true })
   @JoinTable()
   tags: Array<Tag>;
 
@@ -67,6 +59,10 @@ export class Article {
   @ApiProperty()
   @Column({ type: 'int', default: 0 })
   views: number; // 阅读量
+
+  @ApiProperty()
+  @Column({ type: 'int', default: 0 })
+  likes: number; // 喜欢数
 
   @ApiProperty()
   @Column({ type: 'boolean', default: false })

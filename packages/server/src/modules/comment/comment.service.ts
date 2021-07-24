@@ -1,7 +1,7 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { parseUserAgent } from '../../utils/ua.utils';
+import { parseUserAgent } from '../../utils/ua.util';
 import { SMTPService } from '../smtp/smtp.service';
 import { ArticleService } from '../article/article.service';
 import { SettingService } from '../setting/setting.service';
@@ -38,7 +38,8 @@ export class CommentService {
     }
 
     comment.pass = false;
-    comment.userAgent = parseUserAgent(userAgent);
+    const { text: uaText } = parseUserAgent(userAgent);
+    comment.userAgent = uaText;
     comment.html = marked(content).html;
     const newComment = await this.commentRepository.create(comment);
     await this.commentRepository.save(comment);
@@ -179,7 +180,7 @@ export class CommentService {
           this.smtpService.create(emailMessage).catch(() => {
             console.log(`通知用户 ${replyUserName}（${replyUserEmail}），但发送邮件通知失败`);
           });
-        } catch (e) {}
+        } catch (e) {} // eslint-disable-line no-empty
       }
     }
 

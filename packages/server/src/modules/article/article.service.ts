@@ -32,7 +32,7 @@ export class ArticleService {
       throw new HttpException('文章标题已存在', HttpStatus.BAD_REQUEST);
     }
 
-    let { tags, category, status } = article;
+    let { tags, category, status } = article; // eslint-disable-line prefer-const
 
     if (status === 'publish') {
       Object.assign(article, {
@@ -82,7 +82,9 @@ export class ArticleService {
     const [data, total] = await query.getManyAndCount();
 
     data.forEach((d) => {
-      extractProtectedArticle(d);
+      if (d.needPassword) {
+        extractProtectedArticle(d);
+      }
     });
 
     return [data, total];
@@ -256,7 +258,7 @@ export class ArticleService {
    */
   async updateById(id, article: Partial<Article>): Promise<Article> {
     const oldArticle = await this.articleRepository.findOne(id);
-    let { tags, category, status } = article;
+    let { tags, category, status } = article; // eslint-disable-line prefer-const
 
     if (tags) {
       tags = await this.tagService.findByIds(('' + tags).split(','));
@@ -290,6 +292,19 @@ export class ArticleService {
     const oldArticle = await this.articleRepository.findOne(id);
     const updatedArticle = await this.articleRepository.merge(oldArticle, {
       views: oldArticle.views + 1,
+    });
+    return this.articleRepository.save(updatedArticle);
+  }
+
+  /**
+   * 更新喜欢数
+   * @param id
+   * @returns
+   */
+  async updateLikesById(id, type): Promise<Article> {
+    const oldArticle = await this.articleRepository.findOne(id);
+    const updatedArticle = await this.articleRepository.merge(oldArticle, {
+      likes: type === 'like' ? oldArticle.likes + 1 : oldArticle.likes - 1,
     });
     return this.articleRepository.save(updatedArticle);
   }
@@ -378,7 +393,7 @@ export class ArticleService {
         }
         query.setParameter(paramKey, `%${kw.w}%`);
       });
-    } catch (e) {}
+    } catch (e) {} // eslint-disable-line no-empty
 
     const data = await query.getMany();
     return data.filter((d) => d.id !== articleId && d.status === 'publish');

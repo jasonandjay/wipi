@@ -2,7 +2,9 @@ import React, { useEffect, useMemo } from 'react';
 import cls from 'classnames';
 import { NextPage } from 'next';
 import Link from 'next/link';
-import { Icon, Breadcrumb } from 'antd';
+import { Breadcrumb } from 'antd';
+import { useTranslations } from 'next-intl';
+import { LeftOutlined, RightOutlined } from '@ant-design/icons';
 import { KnowledgeProvider } from '@/providers/knowledge';
 import { DoubleColumnLayout } from '@/layout/DoubleColumnLayout';
 import { LocaleTime } from '@/components/LocaleTime';
@@ -20,37 +22,47 @@ interface IProps {
 }
 
 const Page: NextPage<IProps> = ({ pId, id, book, chapter }) => {
+  const t = useTranslations();
   const chapters = book.children || [];
   const tocs = chapter.toc ? JSON.parse(chapter.toc) : [];
   const idx = chapters.findIndex((t) => t.id === chapter.id);
 
   const prev = useMemo(() => {
-    if (idx <= 0) return null;
+    if (idx <= 0) {
+      return null;
+    }
     return chapters[idx - 1];
-  }, [idx]);
+  }, [idx]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const next = useMemo(() => {
-    if (idx >= chapters.length - 1) return null;
+    if (idx >= chapters.length - 1) {
+      return null;
+    }
     return chapters[idx + 1];
-  }, [idx]);
+  }, [idx]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 更新阅读量
   useEffect(() => {
-    if (!chapter) return;
+    if (!chapter) {
+      return;
+    }
     KnowledgeProvider.updateKnowledgeViews(pId);
     KnowledgeProvider.updateKnowledgeViews(id);
   }, [pId, id, chapter]);
 
   useEffect(() => {
-    if (!chapter) return;
-    const el = document.querySelector(`#js-toc-item-wrapper-` + id);
-    if (el) {
-      el.scrollIntoView();
+    if (!chapter) {
+      return;
     }
-  }, []);
+    Promise.resolve().then(() => {
+      const el = document.querySelector(`#js-toc-item-wrapper-` + id);
+      console.log(el);
+      el && el.scrollIntoView();
+    });
+  }, [chapter, id]);
 
   if (!chapter) {
-    return <p>未知章节内容</p>;
+    return <p>{t('unknownKnowledgeChapter')}</p>;
   }
 
   return (
@@ -62,7 +74,7 @@ const Page: NextPage<IProps> = ({ pId, id, book, chapter }) => {
               <Breadcrumb>
                 <Breadcrumb.Item>
                   <Link href="/knowledge">
-                    <a>知识笔记</a>
+                    <a>{t('knowledgeBooks')}</a>
                   </Link>
                 </Breadcrumb.Item>
                 <Breadcrumb.Item>
@@ -80,24 +92,27 @@ const Page: NextPage<IProps> = ({ pId, id, book, chapter }) => {
                     <h1 className={style.title}>{chapter.title}</h1>
                     <p className={style.desc}>
                       <span>
-                        发布于
+                        {t('publishAt')}
                         <LocaleTime date={chapter.publishAt} />
                       </span>
                       <span> • </span>
-                      <span>阅读量 {chapter.views}</span>
+                      <span>
+                        {t('readings')} {chapter.views}
+                      </span>
                     </p>
                   </div>
                   <div>
                     <MarkdownReader content={chapter.html || chapter.content} />
                   </div>
                   <div className={style.copyrightInfo}>
-                    发布时间：
-                    <LocaleTime date={chapter.publishAt} /> | 版权信息：
+                    {t('publishAt')}
+                    <LocaleTime date={chapter.publishAt} /> | {t('copyrightInfo')}：
                     <a
                       href="https://creativecommons.org/licenses/by-nc/3.0/cn/deed.zh"
                       target="_blank"
+                      rel="noreferrer"
                     >
-                      非商用-署名-自由转载
+                      {t('copyrightContent')}
                     </a>
                   </div>
                   <div className={style.navigation}>
@@ -110,7 +125,7 @@ const Page: NextPage<IProps> = ({ pId, id, book, chapter }) => {
                       >
                         <Link href={`/knowledge/[pId]/[id]`} as={`/knowledge/${pId}/${prev.id}`}>
                           <a>
-                            <Icon type="arrow-left" />
+                            <LeftOutlined />
                             <span>{prev.title}</span>
                           </a>
                         </Link>
@@ -126,7 +141,7 @@ const Page: NextPage<IProps> = ({ pId, id, book, chapter }) => {
                         <Link href={`/knowledge/[pId]/[id]`} as={`/knowledge/${pId}/${next.id}`}>
                           <a>
                             <span>{next.title}</span>
-                            <Icon type="arrow-right" />
+                            <RightOutlined />
                           </a>
                         </Link>
                       </div>
@@ -135,8 +150,8 @@ const Page: NextPage<IProps> = ({ pId, id, book, chapter }) => {
                 </article>
                 {book.isCommentable ? (
                   <div className={style.commentWrap}>
-                    <p className={style.title}>评论</p>
-                    <Comment hostId={chapter.id} />
+                    <p className={style.title}>{t('comment')}</p>
+                    <Comment key={chapter.id} hostId={chapter.id} />
                   </div>
                 ) : null}
               </div>
@@ -149,11 +164,11 @@ const Page: NextPage<IProps> = ({ pId, id, book, chapter }) => {
               <header>{book.title}</header>
               <main>
                 <ul>
-                  {chapters.map((item) => {
+                  {chapters.map((chapter) => {
                     return (
-                      <li key={item.id} id={`js-toc-item-wrapper-` + item.id}>
-                        <Link as={`/knowledge/${pId}/${item.id}`} href={`/knowledge/[pId]/[id]`}>
-                          <a className={cls(item.id === id && style.active)}>{item.title}</a>
+                      <li key={chapter.id} id={`js-toc-item-wrapper-${chapter.id}`}>
+                        <Link as={`/knowledge/${pId}/${chapter.id}`} href={`/knowledge/[pId]/[id]`}>
+                          <a className={cls(chapter.id === id && style.active)}>{chapter.title}</a>
                         </Link>
                       </li>
                     );
@@ -163,11 +178,24 @@ const Page: NextPage<IProps> = ({ pId, id, book, chapter }) => {
             </div>
             {tocs && tocs.length ? (
               <div className={style.infoWrapper}>
-                <Toc tocs={tocs} />
+                <Toc key={chapter.id} tocs={tocs} />
               </div>
             ) : null}
           </div>
         }
+        likesProps={{
+          defaultCount: chapter.likes,
+          id: chapter.id,
+          api: (id, type) =>
+            KnowledgeProvider.updateKnowledgeLikes(id, type).then((res) => res.likes),
+        }}
+        showComment={book.isCommentable}
+        shareProps={{
+          cover: book.cover,
+          title: book.title,
+          desc: chapter.title,
+          url: `/knowledge/${pId}/${id}`,
+        }}
       />
     </>
   );

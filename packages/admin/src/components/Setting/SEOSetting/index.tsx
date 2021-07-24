@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Input, Button, message } from 'antd';
+import { Form } from '@ant-design/compatible';
+import { Input, Button, message } from 'antd';
 import { SettingProvider } from '@/providers/setting';
 
 export const SEOSetting = ({ setting }) => {
@@ -16,13 +17,13 @@ export const SEOSetting = ({ setting }) => {
       seoKeyword,
       seoDesc,
     };
-    SettingProvider.updateSetting(data).then((res) => {
+    SettingProvider.updateSetting(data).then(() => {
       message.success('保存成功');
     });
   };
 
   return (
-    <div>
+    <Form layout="vertical">
       <Form.Item label="关键词">
         <Input
           placeholder="请输入关键词，空格分割"
@@ -45,6 +46,6 @@ export const SEOSetting = ({ setting }) => {
       <Button type="primary" onClick={save}>
         保存
       </Button>
-    </div>
+    </Form>
   );
 };

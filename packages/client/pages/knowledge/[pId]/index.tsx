@@ -2,9 +2,12 @@ import React, { useCallback } from 'react';
 import cls from 'classnames';
 import { NextPage } from 'next';
 import Link from 'next/link';
-import { Breadcrumb, Button, Icon } from 'antd';
+import { useTranslations } from 'next-intl';
+import { Breadcrumb, Button } from 'antd';
+import { RightOutlined } from '@ant-design/icons';
 import { KnowledgeProvider } from '@/providers/knowledge';
 import { DoubleColumnLayout } from '@/layout/DoubleColumnLayout';
+import { ListTrail } from '@/components/Animation/Trail';
 import { LocaleTime } from '@/components/LocaleTime';
 import { KnowledgeList } from '@/components/KnowledgeList';
 import style from './index.module.scss';
@@ -16,12 +19,13 @@ interface IProps {
 }
 
 const Page: NextPage<IProps> = ({ pId, book, otherBooks = [] }) => {
+  const t = useTranslations();
   const chapters = (book && book.children) || [];
 
   const start = useCallback(() => {
     const chapter = chapters[0];
     window.open(`/knowledge/${pId}/${chapter.id}`);
-  }, []);
+  }, [pId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!book) {
     return null;
@@ -44,7 +48,7 @@ const Page: NextPage<IProps> = ({ pId, book, otherBooks = [] }) => {
           <Breadcrumb>
             <Breadcrumb.Item>
               <Link href="/knowledge">
-                <a>知识笔记</a>
+                <a>{t('knowledgeBooks')}</a>
               </Link>
             </Breadcrumb.Item>
             <Breadcrumb.Item>{book.title}</Breadcrumb.Item>
@@ -70,7 +74,9 @@ const Page: NextPage<IProps> = ({ pId, book, otherBooks = [] }) => {
                       <p className={style.title}>{book.title}</p>
                       <p className={style.desc}>{book.summary}</p>
                       <p className={style.meta}>
-                        <span>{book.views} 次阅读</span>
+                        <span>
+                          {book.views} {t('readingCount')}
+                        </span>
                         <span className={style.seperator}>·</span>
                         <span className={style.pullRight}>
                           <LocaleTime date={book.publishAt} />
@@ -78,7 +84,7 @@ const Page: NextPage<IProps> = ({ pId, book, otherBooks = [] }) => {
                       </p>
                       <div className={style.btnWrap}>
                         <Button type="primary" onClick={start} disabled={!chapters.length}>
-                          开始阅读
+                          {t('startReading')}
                         </Button>
                       </div>
                     </div>
@@ -86,9 +92,17 @@ const Page: NextPage<IProps> = ({ pId, book, otherBooks = [] }) => {
                 </section>
                 {chapters.length ? (
                   <ul>
-                    {chapters.map((chapter) => {
-                      return (
-                        <li key={chapter.id}>
+                    <ListTrail
+                      length={chapters.length}
+                      options={{
+                        opacity: 1,
+                        height: 44,
+                        from: { opacity: 0, height: 0 },
+                      }}
+                      renderItem={(idx) => {
+                        const chapter = chapters[idx];
+
+                        return (
                           <Link
                             as={`/knowledge/${pId}/${chapter.id}`}
                             href={`/knowledge/[pId]/[id]`}
@@ -97,16 +111,16 @@ const Page: NextPage<IProps> = ({ pId, book, otherBooks = [] }) => {
                               <span>{chapter.title}</span>
                               <span>
                                 <LocaleTime date={chapter.createAt} />
-                                <Icon type="arrow-right" />
+                                <RightOutlined />
                               </span>
                             </a>
                           </Link>
-                        </li>
-                      );
-                    })}
+                        );
+                      }}
+                    />
                   </ul>
                 ) : (
-                  <div className={'empty'}>敬请期待</div>
+                  <div className={'empty'}>{t('pleaseWait')}</div>
                 )}
               </main>
             </section>
@@ -114,7 +128,7 @@ const Page: NextPage<IProps> = ({ pId, book, otherBooks = [] }) => {
         }
         rightNode={
           <div className={cls('sticky', style.tocWrapper)}>
-            <header>其他知识笔记</header>
+            <header>{t('otherKnowledges')}</header>
             <main>
               <KnowledgeList knowledges={otherBooks} />
             </main>

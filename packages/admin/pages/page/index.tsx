@@ -1,17 +1,22 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { NextPage } from 'next';
-import { useRouter } from 'next/router';
 import Link from 'next/link';
-import { Modal, Divider, Badge, Popconfirm, Spin, Select, Button, Icon, message } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
+import { Modal, Divider, Badge, Popconfirm, Spin, Select, Button, message } from 'antd';
+import { resolveUrl } from '@/utils';
+import { useSetting } from '@/hooks/useSetting';
+import { useToggle } from '@/hooks/useToggle';
+import { useAsyncLoading } from '@/hooks/useAsyncLoading';
+import { usePagination } from '@/hooks/usePagination';
+import { PaginationTable } from '@/components/PaginationTable';
 import { AdminLayout } from '@/layout/AdminLayout';
 import { PageProvider } from '@/providers/page';
 import { ViewProvider } from '@/providers/view';
 import { LocaleTime } from '@/components/LocaleTime';
 import { ViewChart } from '@/components/ViewChart';
 import style from './index.module.scss';
-import { useSetting } from '@/hooks/useSetting';
-import { DataTable } from '@/components/DataTable';
-const url = require('url');
+
+let updateLoadingMessage = null;
 
 const columns = [
   {
@@ -53,71 +58,116 @@ const columns = [
     render: (date) => <LocaleTime date={date} />,
   },
 ];
+const SEARCH_FIELDS = [
+  {
+    label: '名称',
+    field: 'name',
+    msg: '请输入页面名称',
+  },
+  {
+    label: '路径',
+    field: 'path',
+    msg: '请输入页面路径',
+  },
+  {
+    label: '状态',
+    field: 'status',
+    children: (
+      <Select style={{ width: 180 }}>
+        {[
+          { label: '已发布', value: 'publish' },
+          { label: '草稿', value: 'draft' },
+        ].map((t) => {
+          return (
+            <Select.Option key={t.label} value={t.value}>
+              {t.label}
+            </Select.Option>
+          );
+        })}
+      </Select>
+    ),
+  },
+];
 
-interface IProps {
-  pages: IPage[];
-  total: number;
-}
-
-const Page: NextPage<IProps> = ({ pages: defaultPages = [], total: defaultTotal = 0 }) => {
-  const router = useRouter();
+const Page: NextPage = () => {
   const setting = useSetting();
-  const [pages, setPages] = useState<IPage[]>(defaultPages);
-  const [visible, setVisible] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const {
+    loading: listLoading,
+    data,
+    refresh,
+    ...resetPagination
+  } = usePagination<IPage>(PageProvider.getPages);
+  const [modalVisible, toggleModalVisible] = useToggle(false);
   const [views, setViews] = useState<IView[]>([]);
-  const [params, setParams] = useState(null);
+  const [updateApi, updateLoading] = useAsyncLoading(PageProvider.updatePage);
+  const [deleteApi, deleteLoading] = useAsyncLoading(PageProvider.deletePage);
+  const [getViewsByUrlApi, getViewsLoading] = useAsyncLoading(ViewProvider.getViewsByUrl);
 
-  const getViews = useCallback((url) => {
-    setLoading(true);
-    ViewProvider.getViewsByUrl(url).then((res) => {
-      setViews(res);
-      setTimeout(() => {
-        setLoading(false);
-      }, 500);
-    });
-  }, []);
-
-  const getPages = useCallback((params = {}) => {
-    return PageProvider.getPages(params).then((res) => {
-      setParams(params);
-      setPages(res[0]);
-      return res;
-    });
-  }, []);
-
-  const deleteArticle = useCallback(
-    (id) => {
-      PageProvider.deletePage(id).then(() => {
-        message.success('页面删除成功');
-        getPages(params);
-      });
+  const updateAction = useCallback(
+    (articles, key, value = null) => {
+      if (!Array.isArray(articles)) {
+        articles = [articles];
+      }
+      return () =>
+        Promise.all(
+          articles.map((article) =>
+            updateApi(article.id, { [key]: value !== null ? value : !article[key] })
+          )
+        ).then(() => {
+          message.success('操作成功');
+          refresh();
+        });
     },
-    [params]
+    [updateApi, refresh]
   );
 
-  const editPage = useCallback(
-    (id, data) => {
-      PageProvider.updatePage(id, data).then(() => {
-        message.success('操作成功');
-        getPages(params);
+  const deleteAction = useCallback(
+    (ids, resetSelectedRows = null) => {
+      if (!Array.isArray(ids)) {
+        ids = [ids];
+      }
+      return () => {
+        Promise.all(ids.map((id) => deleteApi(id))).then(() => {
+          message.success('操作成功');
+          resetSelectedRows && resetSelectedRows();
+          refresh();
+        });
+      };
+    },
+    [deleteApi, refresh]
+  );
+
+  const getViews = useCallback(
+    (url) => {
+      toggleModalVisible();
+      getViewsByUrlApi(url).then((res) => {
+        setViews(res);
       });
     },
-    [params]
+    [toggleModalVisible, getViewsByUrlApi]
   );
+
+  const closeViewModal = useCallback(() => {
+    toggleModalVisible();
+    setViews([]);
+  }, [toggleModalVisible]);
 
   const titleColumn = {
     title: '名称',
     dataIndex: 'name',
     key: 'name',
     render: (text, record) => (
-      <a href={url.resolve(setting.systemUrl || '', `/page/${record.path}`)} target="_blank">
+      <a
+        href={resolveUrl(setting.systemUrl || '', `/page/${record.path}`)}
+        target="_blank"
+        rel="noreferrer"
+      >
         {text}
       </a>
     ),
   };
 
-  const actionColumn = {
+  const actionColumn = (resetSelectedRows) => ({
     title: '操作',
     key: 'action',
     render: (_, record) => {
@@ -125,114 +175,131 @@ const Page: NextPage<IProps> = ({ pages: defaultPages = [], total: defaultTotal 
 
       return (
         <span className={style.action}>
-          {isDraft ? (
-            <a onClick={() => editPage(record.id, { status: 'publish' })}>启用</a>
-          ) : (
-            <a onClick={() => editPage(record.id, { status: 'draft' })}>禁用</a>
-          )}
-          <Divider type="vertical" />
           <Link href={`/page/editor/[id]`} as={`/page/editor/` + record.id}>
-            <a target="_blank">编辑</a>
+            <a>
+              <Button type="link" size={'small'}>
+                编辑
+              </Button>
+            </a>
           </Link>
           <Divider type="vertical" />
-          <span
-            onClick={() => {
-              setVisible(true);
-              getViews(url.resolve(setting.systemUrl, '/page/' + record.path));
-            }}
+          {isDraft ? (
+            <Button type="link" size={'small'} onClick={updateAction(record, 'status', 'publish')}>
+              发布
+            </Button>
+          ) : (
+            <Button type="link" size={'small'} onClick={updateAction(record, 'status', 'draft')}>
+              下线
+            </Button>
+          )}
+          <Divider type="vertical" />
+          <Button
+            type="link"
+            size={'small'}
+            onClick={() => getViews(resolveUrl(setting.systemUrl, '/page/' + record.id))}
           >
-            <a>查看访问</a>
-          </span>
+            查看访问
+          </Button>
           <Divider type="vertical" />
           <Popconfirm
-            title="确认删除这个页面？"
-            onConfirm={() => deleteArticle(record.id)}
+            title="确认删除这个文章？"
+            onConfirm={deleteAction(record.id, resetSelectedRows)}
             okText="确认"
             cancelText="取消"
+            okButtonProps={{ loading: deleteLoading }}
           >
-            <a>删除</a>
+            <Button type="link" size={'small'}>
+              删除
+            </Button>
           </Popconfirm>
         </span>
       );
     },
-  };
+  });
+
+  useEffect(() => {
+    if (updateLoading) {
+      updateLoadingMessage = message.loading('操作中...', 0);
+    } else {
+      updateLoadingMessage && updateLoadingMessage();
+    }
+  }, [updateLoading]);
 
   return (
     <AdminLayout>
       <div className={style.wrapper}>
-        <DataTable
-          data={pages}
-          defaultTotal={defaultTotal}
+        <PaginationTable
+          showSelection={true}
+          loading={listLoading}
+          data={data}
+          columns={(resetSelectedRows) => [
+            titleColumn,
+            ...columns,
+            actionColumn(resetSelectedRows),
+          ]}
+          refresh={refresh}
+          {...resetPagination}
+          renderLeftNode={({ hasSelected, selectedRowKeys, selectedRows, resetSelectedRows }) =>
+            hasSelected ? (
+              <>
+                <Button
+                  disabled={!hasSelected}
+                  style={{ marginRight: 8 }}
+                  onClick={updateAction(selectedRows, 'status', 'publish')}
+                >
+                  发布
+                </Button>
+                <Button
+                  disabled={!hasSelected}
+                  style={{ marginRight: 8 }}
+                  onClick={updateAction(selectedRows, 'status', 'draft')}
+                >
+                  下线
+                </Button>
+                <Popconfirm
+                  title="确认删除？"
+                  onConfirm={deleteAction(selectedRowKeys, resetSelectedRows)}
+                  okText="确认"
+                  cancelText="取消"
+                >
+                  <Button disabled={!hasSelected} loading={false} danger={true}>
+                    删除
+                  </Button>
+                </Popconfirm>
+              </>
+            ) : null
+          }
           rightNode={
             <Link href={'/page/editor'}>
-              <a target="_blank">
+              <a>
                 <Button type="primary">
-                  <Icon type="plus" />
+                  <PlusOutlined />
                   新建
                 </Button>
               </a>
             </Link>
           }
-          columns={[titleColumn, ...columns, actionColumn]}
-          searchFields={[
-            {
-              label: '名称',
-              field: 'name',
-              msg: '请输入页面名称',
-            },
-            {
-              label: '路径',
-              field: 'path',
-              msg: '请输入页面路径',
-            },
-            {
-              label: '状态',
-              field: 'status',
-              children: (
-                <Select style={{ width: 180 }}>
-                  {[
-                    { label: '已发布', value: 'publish' },
-                    { label: '草稿', value: 'draft' },
-                  ].map((t) => {
-                    return (
-                      <Select.Option key={t.label} value={t.value}>
-                        {t.label}
-                      </Select.Option>
-                    );
-                  })}
-                </Select>
-              ),
-            },
-          ]}
-          onSearch={getPages}
+          searchFields={SEARCH_FIELDS}
         />
         <Modal
           title="访问统计"
-          visible={visible}
+          visible={modalVisible}
           width={640}
-          onCancel={() => {
-            setVisible(false);
-            setViews([]);
-          }}
+          onCancel={closeViewModal}
           maskClosable={false}
           footer={null}
+          transitionName={''}
+          maskTransitionName={''}
         >
-          {loading ? (
-            <div style={{ textAlign: 'center' }}>
-              <Spin spinning={loading}></Spin>
-            </div>
-          ) : (
-            <ViewChart data={views} />
-          )}
+          <div style={{ textAlign: 'center' }}>
+            <Spin spinning={getViewsLoading}>
+              <ViewChart data={views} />
+            </Spin>
+          </div>
         </Modal>
       </div>
     </AdminLayout>
   );
-};
-
-Page.getInitialProps = async () => {
-  const pages = await PageProvider.getPages({ page: 1, pageSize: 12 });
-  return { pages: pages[0], total: pages[1] };
 };
 
 export default Page;

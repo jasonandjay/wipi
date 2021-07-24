@@ -3,11 +3,8 @@ import { message } from 'antd';
 import Router from 'next/router';
 
 export const httpProvider = axios.create({
-  baseURL:
-    process.env.NODE_ENV === 'development'
-      ? 'http://localhost:4000/api'
-      : 'https://api.blog.wipi.tech/api',
-  timeout: 10000,
+  baseURL: process.env.SERVER_API_URL,
+  timeout: 60000,
 });
 
 httpProvider.interceptors.request.use(
@@ -15,23 +12,23 @@ httpProvider.interceptors.request.use(
     return config;
   },
 
-  (err) => {
+  () => {
     throw new Error('发起请求出错');
   }
 );
 
 httpProvider.interceptors.response.use(
   (data) => {
-    if (data.status && data.status == 200 && data.data.status == 'error') {
+    if (data.status && +data.status === 200 && data.data.status === 'error') {
       typeof window !== 'undefined' && message.error({ message: data.data.msg });
-      return;
+      return null;
     }
 
     const res = data.data;
 
     if (!res.success) {
       message.error(res.msg);
-      return;
+      return null;
     }
 
     return res.data;
