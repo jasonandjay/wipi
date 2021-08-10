@@ -27,6 +27,9 @@ const Article: NextPage<IProps> = ({ article }) => {
   const { setting } = useContext(GlobalContext);
   const passwdRef = useRef(null);
   const [shouldCheckPassWord, setShouldCheckPassword] = useState(article && article.needPassword);
+  // const [shouldCheckPay, setShouldCheckPay] = useState(article && article.totalAmount && !article.isPay);
+  const [shouldCheckPay, setShouldCheckPay] = useState(true);
+
   const tocs = article && article.toc ? JSON.parse(article.toc) : [];
 
   // 检查文章密码
@@ -41,6 +44,8 @@ const Article: NextPage<IProps> = ({ article }) => {
       }
     });
   }, [t, article]);
+
+  // 发起支付
 
   const back = useCallback(() => {
     Router.push('/');
@@ -205,6 +210,13 @@ const Article: NextPage<IProps> = ({ article }) => {
               desc: article.summary,
               url: `/article/${article.id}`,
             }
+      }
+      showPay={
+        shouldCheckPay?
+          {
+            id: article.id,
+            totalAmount: article.totalAmount
+          }: null
       }
     />
   );

@@ -77,6 +77,15 @@ export class Article {
   needPassword: boolean;
 
   @ApiProperty()
+  @Column({ type: 'text', default: null })
+  totalAmount: string;
+
+  @ApiProperty()
+  @Column({ type: 'boolean', default: false })
+  isPay: boolean;
+
+
+  @ApiProperty()
   @Column({ type: 'boolean', default: true })
   isCommentable: boolean;
 

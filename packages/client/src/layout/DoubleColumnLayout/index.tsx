@@ -6,6 +6,7 @@ import { LikesProps, Likes } from '@/components/Likes';
 import { useToggle } from '@/hooks/useToggle';
 import { getDocumentScrollTop } from '@/utils';
 import style from './index.module.scss';
+import { AliPay, AliPayProps } from '@/components/AliPay';
 
 interface IProps {
   leftNode: React.ReactNode;
@@ -18,6 +19,7 @@ interface IProps {
   likesProps?: LikesProps;
   showComment?: boolean;
   shareProps?: ShareProps;
+  showPay?: AliPayProps;
 }
 
 export const DoubleColumnLayout: React.FC<IProps> = ({
@@ -31,6 +33,7 @@ export const DoubleColumnLayout: React.FC<IProps> = ({
   likesProps,
   showComment = false,
   shareProps,
+  showPay
 }) => {
   const [showWidge, toggleWidge] = useToggle(true);
 
@@ -78,6 +81,12 @@ export const DoubleColumnLayout: React.FC<IProps> = ({
               {shareProps && (
                 <div className={style.widgetWrapper}>
                   <Share {...shareProps} />
+                </div>
+              )}
+              {
+                showPay && (
+                  <div className={style.widgetWrapper}>
+                  <AliPay {...showPay} />
                 </div>
               )}
             </div>

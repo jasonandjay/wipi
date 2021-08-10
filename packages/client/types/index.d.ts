@@ -30,6 +30,8 @@ interface IArticle {
   status: string;
   password?: string; // 访问密码
   needPassword: boolean;
+  totalAmount?: string; // 付费金额
+  isPay: boolean;
   isRecommended?: boolean;
   isCommentable?: boolean; // 是否可评论
   createAt: string;

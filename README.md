@@ -83,6 +83,7 @@ yarn dev
 前台页面地址：`http://localhost:3000`。
 后台管理地址：`http://localhost:3001`。
 服务接口地址：`http://localhost:4000`。
+协同服务地址：`http://localhost:9999`。
 
 首次启动，默认创建管理员用户：admin，密码：admin（可在 `.env` 文件中进行修改）。
 [PS] 如服务端配置启动失败，请先确认 MySQL 的配置是否正确，配置文件在 `.env`。在生产环境中需要在后台正确设置系统的地址，否则二维码无法正确识别。本地开发环境中，如未填域名地址，默认为空。
@@ -178,3 +179,22 @@ server {
 - next.js 文档：https://nextjs.org/
 - nest.js 源码：https://github.com/nestjs/nest
 - nest.js 文档：https://nestjs.com/
+
+
+## 支付宝沙箱
+### 商家信息
+商家账号hhblge0366@sandbox.com
+商户UID2088102178185810
+登录密码111111
+账户余额
+0.00充值取现
+
+### 买家信息
+买家账号dvugod3680@sandbox.com
+登录密码111111
+支付密码111111
+用户名称沙箱环境
+证件类型身份证(IDENTITY_CARD)
+证件号码108979195208187847
+账户余额
+99999.00充值取现

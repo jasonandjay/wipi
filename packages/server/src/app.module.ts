@@ -3,6 +3,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 // 鉴权模块
 import { AuthModule } from './modules/auth/auth.module';
+// 支付模块
+import { AlipayModule } from './modules/alipay/alipay.module';
 // 用户模块
 import { UserModule } from './modules/user/user.module';
 import { User } from './modules/user/user.entity';
@@ -79,6 +81,7 @@ const { file: envFilePath } = require('../../../config/env');
       }),
     }),
     UserModule,
+    AlipayModule,
     FileModule,
     TagModule,
     ArticleModule,

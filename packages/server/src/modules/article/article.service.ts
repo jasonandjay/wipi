@@ -225,6 +225,23 @@ export class ArticleService {
   }
 
   /**
+   * 支付后更新支付状态
+   * @param id
+   * @param isPay
+   */
+   async updatePay(id): Promise<{ pass: boolean }> {
+    const data = await this.articleRepository
+      .createQueryBuilder('article')
+      .where('article.id=:id')
+      .setParameter('id', id)
+      .setParameter('isPay', true)
+      .getOne();
+
+    const pass = !!data;
+    return pass ? { pass: !!data, ...data } : { pass: false };
+  }
+
+  /**
    * 获取指定文章信息
    * @param id
    */

@@ -24,6 +24,7 @@ const FormItem = ({ label, content }) => {
 const initialArticleAttrs = {
   summary: null, // 摘要
   password: null, // 密码
+  totalAmount: null, //支付金额
   isCommentable: true, // 评论
   isRecommended: true, // 推荐到首页
   category: null, // 分类
@@ -37,6 +38,8 @@ function reducer(state: typeof initialArticleAttrs = initialArticleAttrs, action
       return { ...state, summary: payload };
     case 'password':
       return { ...state, password: payload };
+    case 'totalAmount':
+        return { ...state, totalAmount: payload };
     case 'isCommentable':
       return { ...state, isCommentable: payload };
     case 'isRecommended':
@@ -100,6 +103,18 @@ export const ArticleSettingDrawer: React.FC<IProps> = ({ article, visible, onClo
             value={attrs.password}
             onChange={(e) => {
               dispatch({ type: 'password', payload: e.target.value });
+            }}
+          />
+        }
+      />
+      <FormItem
+        label="付费查看"
+        content={
+          <Input.Password
+            placeholder="输入后需要支付的费用"
+            value={attrs.totalAmount}
+            onChange={(e) => {
+              dispatch({ type: 'totalAmount', payload: e.target.value });
             }}
           />
         }
