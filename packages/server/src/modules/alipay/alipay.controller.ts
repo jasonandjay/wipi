@@ -29,7 +29,7 @@ export class AlipayController {
       totalAmount = '0.01',
       subject = '文章付费',
       // notifyUrl = 'http://123.206.55.50:11000/alipay/notify',
-      notifyUrl = 'http://creationapi.shbwyz.com/api/alipay/notify',
+      notifyUrl = 'https://creationapi.shbwyz.com/api/alipay/notify',
     } = body;
     // 调用 setMethod 并传入 get，会返回可以跳转到支付页面的 url
     formData.setMethod('get');
