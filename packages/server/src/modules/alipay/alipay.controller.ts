@@ -28,7 +28,8 @@ export class AlipayController {
       id,
       totalAmount = '0.01',
       subject = '文章付费',
-      notifyUrl = 'http://123.206.55.50:4000/api/alipay/notify',
+      // notifyUrl = 'http://123.206.55.50:11000/alipay/notify',
+      notifyUrl = 'http://creationapi.shbwyz.com/api/alipay/notify',
     } = body;
     // 调用 setMethod 并传入 get，会返回可以跳转到支付页面的 url
     formData.setMethod('get');
@@ -55,7 +56,7 @@ export class AlipayController {
   @Post('/notify')
   async notify(@Body() body) {
     console.log('notify...', body);
-    if (body.alipay_trade_pay_response.msg === 'Success') {
+    if (body.notify_time && body.trade_status === 'TRADE_SUCCESS') {
       this.articleService.updatePay(body.out_trade_no);
     }
   }

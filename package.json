@@ -17,7 +17,6 @@
     "dev:server": "yarn --cwd packages/server dev",
     "dev:admin": "yarn --cwd packages/admin dev",
     "dev:client": "yarn --cwd packages/client dev",
-    "dev:ot-server": "yarn --cwd packages/ot-server dev",
     "build": "yarn build:server && yarn build:admin && yarn build:client",
     "build:server": "yarn --cwd packages/server build",
     "build:admin": "yarn --cwd packages/admin build",
