@@ -27,8 +27,10 @@ const Article: NextPage<IProps> = ({ article }) => {
   const { setting } = useContext(GlobalContext);
   const passwdRef = useRef(null);
   const [shouldCheckPassWord, setShouldCheckPassword] = useState(article && article.needPassword);
-  // const [shouldCheckPay, setShouldCheckPay] = useState(article && article.totalAmount && !article.isPay);
-  const [shouldCheckPay, setShouldCheckPay] = useState(true);
+  const [shouldCheckPay, setShouldCheckPay] = useState(
+    article && article.totalAmount && !article.isPay
+  );
+  // const [shouldCheckPay, setShouldCheckPay] = useState(true);
 
   const tocs = article && article.toc ? JSON.parse(article.toc) : [];
 
@@ -212,11 +214,12 @@ const Article: NextPage<IProps> = ({ article }) => {
             }
       }
       showPay={
-        shouldCheckPay?
-          {
-            id: article.id,
-            totalAmount: article.totalAmount
-          }: null
+        shouldCheckPay
+          ? {
+              id: article.id,
+              totalAmount: article.totalAmount,
+            }
+          : null
       }
     />
   );

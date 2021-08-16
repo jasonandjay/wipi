@@ -179,3 +179,12 @@ server {
 - next.js 文档：https://nextjs.org/
 - nest.js 源码：https://github.com/nestjs/nest
 - nest.js 文档：https://nestjs.com/
+
+
+## 调试支付
+修改server中的alipaysdk
+路径：packages/server/node_modules/alipay-sdk/lib/alipay.js中51行
+```js
+gateway: 'https://openapi.alipay.com/gateway.do',
+改成gateway: 'https://openapi.alipaydev.com/gateway.do',
+```

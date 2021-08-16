@@ -7,6 +7,13 @@ import { default as Router } from 'next/router';
 export const ResourceCreate = ({ collapsed = false }) => {
   const menu = (
     <Menu>
+      <Menu.Item onClick={() => Router.push('/article/amEditor')}>
+        <Link href={'/article/amEditor'}>
+          <a>
+            <span>新建文章-协同编辑器</span>
+          </a>
+        </Link>
+      </Menu.Item>
       <Menu.Item onClick={() => Router.push('/article/editor')}>
         <Link href={'/article/editor'}>
           <a>

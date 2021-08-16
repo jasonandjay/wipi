@@ -4,7 +4,7 @@
   "author": "fantasticit <fantasticit@163.com>",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 3001",
+    "dev": "NODE_OPTIONS='--experimental-modules' next dev -p 3001",
     "prebuild": "rimraf .next",
     "build": "next build",
     "start": "next start -p 3001",
@@ -12,6 +12,9 @@
   },
   "dependencies": {
     "@ant-design/compatible": "^1.0.8",
+    "@babel/core": "^7.15.0",
+    "@babel/plugin-transform-runtime": "^7.15.0",
+    "@babel/preset-env": "^7.15.0",
     "antd": "^4.16.0",
     "array-move": "^3.0.1",
     "axios": "^0.19.2",
@@ -32,6 +35,8 @@
     "react-dom": "16.12.0",
     "react-helmet": "^5.2.1",
     "react-sortable-hoc": "^2.0.0",
+    "reconnecting-websocket": "^4.4.0",
+    "sharedb": "^1.9.2",
     "showdown": "^1.9.1",
     "viewerjs": "^1.5.0"
   },
