@@ -1,4 +1,4 @@
 module.exports = {
-  siteUrl: 'https://blog.wipi.tech',
+  siteUrl: 'https://creation.shbwyz.com',
   generateRobotsTxt: true,
 }
