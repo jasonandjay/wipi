@@ -12,6 +12,7 @@ import { CommentStatus } from '@/components/comment/CommentStatus';
 import { CommentAction } from '@/components/comment/CommentAction';
 import { CommentContent } from '@/components/comment/CommentContent';
 import style from './index.module.scss';
+import EchartView from '@/components/EchartView';
 
 const { Title, Paragraph } = Typography;
 
@@ -60,6 +61,7 @@ const Home: NextPage<IHomeProps> = ({ articles = [], comments: defaultComments =
     });
   }, []);
 
+  console.log(123);
   return (
     <AdminLayout
       headerAppender={
@@ -84,6 +86,22 @@ const Home: NextPage<IHomeProps> = ({ articles = [], comments: defaultComments =
           />
         </div>
       ) : null}
+      {/* 用户管理图表 */}
+      <EchartView option={{
+        xAxis: {
+          type: 'category',
+          data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+        },
+        yAxis: {
+          type: 'value'
+        },
+        series: [{
+          data: [120, 200, 150, 80, 70, 110, 130],
+          type: 'bar'
+        }]
+      }}></EchartView>
+      {/* 评论数图表 */}
+      <EchartView></EchartView>
       <Card title="快速导航" bordered={false} bodyStyle={{ padding: 0 }}>
         <Row>
           {actions.map((action) => {

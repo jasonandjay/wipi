@@ -246,7 +246,7 @@ export const AmArticleEditor: React.FC<IProps> = ({
             patchArticle('toc')(toc);
           }}
         /> */}
-        <iframe src="http://123.206.55.50/editor/static/"></iframe>
+        <iframe src="https://jasonandjay.com/editor/static/"></iframe>
         {/* <iframe src="http://127.0.0.1:8000"></iframe> */}
       </main>
       <ArticleSettingDrawer
