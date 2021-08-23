@@ -61,7 +61,6 @@ const Home: NextPage<IHomeProps> = ({ articles = [], comments: defaultComments =
     });
   }, []);
 
-  console.log(123);
   return (
     <AdminLayout
       headerAppender={
@@ -86,23 +85,37 @@ const Home: NextPage<IHomeProps> = ({ articles = [], comments: defaultComments =
           />
         </div>
       ) : null}
-      {/* 用户管理图表 */}
-      <EchartView option={{
-        xAxis: {
-          type: 'category',
-          data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-        },
-        yAxis: {
-          type: 'value'
-        },
-        series: [{
-          data: [120, 200, 150, 80, 70, 110, 130],
-          type: 'bar'
-        }]
-      }}></EchartView>
+      <Card title="面板导航" bordered={false} bodyStyle={{ padding: 0 }}>
+        {/* 用户管理图表 */}
+        <EchartView option={{
+          legend: {
+            data: ['评论数', '访问量']
+          },
+          title: {
+            text: '每周用户访问指标',
+            padding: 25
+          },  
+          xAxis: {
+            type: 'category',
+            data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+          },
+          yAxis: {
+            type: 'value'
+          },
+          series: [{
+            name: '评论数',
+            data: [120, 200, 150, 80, 70, 110, 130],
+            type: 'bar'
+          }, {
+            name: '访问量',
+            type: 'line',
+            data: [360, 289, 352, 120, 96, 130, 166]
+          }]
+        }}></EchartView>
+      </Card>
       {/* 评论数图表 */}
-      <EchartView></EchartView>
-      <Card title="快速导航" bordered={false} bodyStyle={{ padding: 0 }}>
+      {/* <EchartView></EchartView> */}
+      <Card title="快速导航" bordered={false}  style={{ marginTop: 24 }} bodyStyle={{ padding: 0 }}>
         <Row>
           {actions.map((action) => {
             return (
